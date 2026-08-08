@@ -2,7 +2,7 @@ import { profile } from "@/data/profile";
 
 export function Education() {
   return (
-    <section id="education" className="section-pad scroll-mt-24 py-20 md:py-28">
+    <section id="education" className="work-section section-pad scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto max-w-6xl">
         <div data-animate="fade-up">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">

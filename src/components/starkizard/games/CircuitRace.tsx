@@ -1,16 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fireConfetti } from "@/components/fx/confetti";
 
 const W = 860;
 const H = 560;
-const LAPS = 5;
+const LAPS = 3;
 const TRACK_HALF = 40;
 /** Throttle / coast / brake feel — deliberately gradual. */
-const ACCEL = 0.085;
+const ACCEL = 0.098;
 const COAST = 0.991;
 const BRAKE = 0.2;
-const MAX_SPEED = 5.6;
+const MAX_SPEED = 5.85;
 const LIGHT_INTERVAL_MS = 700;
 
 type Pt = { x: number; y: number; label?: string };
@@ -427,14 +428,16 @@ export function CircuitRace() {
     let lightsOn = 0;
     let lightTimer = 0;
     let goFlash = 0;
-    const ghost = ghostByLayout.current[layoutKey] ?? [];
     const best = bestByLayout.current[layoutKey] ?? null;
+    const ghostReady = (ghostByLayout.current[layoutKey]?.length ?? 0) > 1;
 
     setHud({
       lap: 1,
       time: 0,
       finished: false,
-      status: "Press Enter — five red lights, then lights out",
+      status: ghostReady
+        ? "Ghost on track · Press Enter — five red lights"
+        : "Press Enter — five red lights, then lights out",
       best,
       lights: 0,
       dimmed: true,
@@ -484,11 +487,14 @@ export function CircuitRace() {
           e.preventDefault();
           stage = "awaiting";
           resetOnGrid();
+          const hasGhost = (ghostByLayout.current[layoutKey]?.length ?? 0) > 1;
           setHud({
             lap: 1,
             time: 0,
             finished: false,
-            status: "Press Enter — five red lights, then lights out",
+            status: hasGhost
+              ? "Ghost ready · Press Enter for lights"
+              : "Press Enter — five red lights, then lights out",
             best: bestByLayout.current[layoutKey] ?? null,
             lights: 0,
             dimmed: true,
@@ -639,27 +645,37 @@ export function CircuitRace() {
 
         const delta = near.t - car.lastProgress;
         if (delta < -0.55) {
+          // Progress wrapped past start/finish — count one lap, then snap tracker.
           car.lap += 1;
+          car.lastProgress = near.t;
           if (car.lap > LAPS) {
             stage = "finished";
             const elapsed = (now - car.start) / 1000;
             const prevBest = bestByLayout.current[layoutKey] ?? null;
-            bestByLayout.current[layoutKey] =
-              prevBest === null ? elapsed : Math.min(prevBest, elapsed);
-            ghostByLayout.current[layoutKey] = [...recording];
+            const isPersonalBest = prevBest === null || elapsed < prevBest;
+            if (isPersonalBest) {
+              bestByLayout.current[layoutKey] = elapsed;
+              ghostByLayout.current[layoutKey] = [...recording];
+            }
             setHud({
               lap: LAPS,
               time: elapsed,
               best: bestByLayout.current[layoutKey] ?? null,
               finished: true,
-              status: `Chequered — ${elapsed.toFixed(2)}s · Press Enter`,
+              status: isPersonalBest
+                ? `New PB ${elapsed.toFixed(2)}s · Ghost updated · Press Enter`
+                : `Chequered — ${elapsed.toFixed(2)}s · Press Enter`,
               lights: 0,
               dimmed: true,
               awaitingEnter: true,
             });
+            if (isPersonalBest) {
+              fireConfetti({ count: 110 });
+            }
           }
+        } else {
+          car.lastProgress = near.t;
         }
-        if (delta > -0.4) car.lastProgress = near.t;
 
         recording.push({
           t: now - car.start,
@@ -693,23 +709,38 @@ export function CircuitRace() {
 
       drawTrackScene(draw, path);
 
-      if (ghost.length > 1 && (stage === "racing" || stage === "finished")) {
-        const elapsed =
-          stage === "racing" || stage === "finished"
-            ? Math.max(0, now - (car.start || now))
-            : 0;
+      const ghostTrack = ghostByLayout.current[layoutKey] ?? [];
+      if (ghostTrack.length > 1 && stage === "racing") {
+        const elapsed = Math.max(0, now - car.start);
         let gi = 0;
-        while (gi < ghost.length - 1 && ghost[gi + 1].t < elapsed) {
+        while (gi < ghostTrack.length - 1 && ghostTrack[gi + 1].t < elapsed) {
           gi += 1;
         }
-        const gh = ghost[gi];
+        const a = ghostTrack[gi];
+        const b = ghostTrack[Math.min(gi + 1, ghostTrack.length - 1)];
+        const span = Math.max(1, b.t - a.t);
+        const u = Math.min(1, Math.max(0, (elapsed - a.t) / span));
+        const gx = a.x + (b.x - a.x) * u;
+        const gy = a.y + (b.y - a.y) * u;
+        let ga = a.angle;
+        let diff = b.angle - a.angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        ga += diff * u;
+
         draw.save();
-        draw.translate(gh.x, gh.y);
-        draw.rotate(gh.angle);
-        draw.globalAlpha = 0.35;
-        draw.fillStyle = "#3dff9a";
-        draw.fillRect(-10, -5, 20, 10);
+        draw.translate(gx, gy);
+        draw.rotate(ga);
+        draw.globalAlpha = 0.72;
+        draw.strokeStyle = "rgba(61,255,154,0.95)";
+        draw.lineWidth = 2;
+        draw.fillStyle = "rgba(61,255,154,0.45)";
+        draw.fillRect(-12, -6, 24, 12);
+        draw.strokeRect(-12, -6, 24, 12);
+        draw.fillStyle = "rgba(240,196,92,0.85)";
+        draw.fillRect(6, -4, 7, 8);
         draw.restore();
+        draw.globalAlpha = 1;
       }
 
       for (const s of sparks) {
@@ -799,7 +830,7 @@ export function CircuitRace() {
             Choose circuit
           </p>
           <p className="mt-1 text-sm text-sz-mist/70">
-            Four presets or sketch your own — 5 laps, lights-out start, ghost.
+            Four presets or sketch your own — 3 laps, lights-out start, ghost.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -934,7 +965,7 @@ export function CircuitRace() {
       <p className="text-xs text-sz-mist/40">
         {hud.awaitingEnter
           ? "Screen dims · Press Enter for the five-light start (timer begins on lights out)."
-          : `5 laps · gentler throttle · wall hits dump speed · ▲/W gas · ▼/S brake.`}
+          : `3 laps · gentler throttle · wall hits dump speed · ▲/W gas · ▼/S brake.`}
       </p>
     </div>
   );

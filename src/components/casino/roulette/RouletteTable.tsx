@@ -8,6 +8,7 @@ import {
   type RouletteBetKind,
 } from "@/casino/engine/roulette";
 import { useCasinoSession } from "@/casino/session/CasinoSessionContext";
+import { fireConfetti } from "@/components/fx/confetti";
 import { useRef, useState } from "react";
 import { rotationForResult, Wheel } from "./Wheel";
 
@@ -135,6 +136,9 @@ export function RouletteTable() {
       setMessage(
         `${tone} · landed ${result}${result === 0 ? " (green)" : isRed(result) ? " red" : " black"} · P/L ${net >= 0 ? "+" : ""}${net}`,
       );
+      if (net > 0) {
+        fireConfetti({ count: 70 });
+      }
       spinLock.current = false;
     }, SPIN_MS);
   }

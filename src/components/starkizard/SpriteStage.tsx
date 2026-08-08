@@ -21,7 +21,7 @@ const sprites: Sprite[] = [
     cdnSrc: `${SHOWDOWN_CDN}/charizard-megay.gif`,
     fallbackSrc: "/sprites/charizard-fallback.svg",
     className:
-      "sprite-float h-[min(46vw,240px)] w-auto drop-shadow-[0_0_32px_rgba(255,107,44,0.6)]",
+      "h-[min(46vw,240px)] w-auto drop-shadow-[0_0_32px_rgba(255,107,44,0.6)]",
   },
   {
     id: "mega-rayquaza",
@@ -30,7 +30,7 @@ const sprites: Sprite[] = [
     cdnSrc: `${SHOWDOWN_CDN}/rayquaza-mega.gif`,
     fallbackSrc: "/sprites/rayquaza-fallback.svg",
     className:
-      "sprite-float-delay h-[min(52vw,280px)] w-auto drop-shadow-[0_0_40px_rgba(61,255,154,0.65)]",
+      "h-[min(52vw,280px)] w-auto drop-shadow-[0_0_40px_rgba(61,255,154,0.65)]",
   },
 ];
 
@@ -80,6 +80,30 @@ export function SpriteStage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sz-jade/70 to-transparent"
         aria-hidden
       />
+
+      <header className="relative mb-8 text-center md:mb-10">
+        <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-sz-jade/75">
+          Favorites on the pad
+        </p>
+        <h2 className="display mt-2 text-2xl font-bold tracking-tight text-sz-mist md:text-3xl">
+          My favorite Pokémon
+        </h2>
+        <ul className="mx-auto mt-4 max-w-xl space-y-2 text-left text-sm leading-relaxed text-sz-mist/60">
+          <li>
+            <span className="text-sz-gold">Mega Charizard Y</span> — when the
+            bond with its Trainer burns hot enough, its wings stretch and its
+            flame sacs glow white-hot. Lore says those flames can melt anything,
+            and its flight leaves jet fighters sounding humble.
+          </li>
+          <li>
+            <span className="text-sz-jade">Mega Rayquaza</span> — the sky&apos;s
+            ancient mediator that once calmed Groudon and Kyogre. In Mega form,
+            sparkling micro-particles pour from the openings along its body,
+            glittering through the air as it rides the ozone layer and swallows
+            meteoroids for power.
+          </li>
+        </ul>
+      </header>
 
       <div className="relative flex flex-wrap items-end justify-center gap-10 md:gap-20">
         {sprites.map((sprite) => (

@@ -1,6 +1,8 @@
 "use client";
 
 import type { SessionSummary } from "@/casino/session/CasinoSessionContext";
+import { fireConfetti } from "@/components/fx/confetti";
+import { useEffect } from "react";
 
 function formatDuration(startedAt: number | null, endedAt: number): string {
   if (startedAt == null) return "—";
@@ -26,6 +28,12 @@ export function LeaveSummary({
   onConfirm,
   onStay,
 }: LeaveSummaryProps) {
+  useEffect(() => {
+    if (summary.net > 0) {
+      fireConfetti({ count: 90 });
+    }
+  }, [summary.net]);
+
   const netTone =
     summary.net > 0
       ? "text-sz-jade"

@@ -48,8 +48,10 @@ export function StarkizardNav() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 py-3">
         <Link
           href="/starkizard"
+          data-egg="brand"
           onClick={(e) => confirmLeaveFloor("/starkizard", e)}
           className="display text-lg font-bold tracking-tight text-sz-mist"
+          title="Tony Stark × Charizard. Type numb for a real LP dad joke."
         >
           STARKIZARD
         </Link>

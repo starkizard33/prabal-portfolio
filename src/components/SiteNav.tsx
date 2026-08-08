@@ -10,10 +10,12 @@ const links = [
 
 export function SiteNav() {
   return (
-    <header className="section-pad sticky top-0 z-40 border-b border-ink/8 bg-paper/75 backdrop-blur-md">
+    <header className="section-pad sticky top-0 z-40 border-b border-ink/8 bg-paper/70 backdrop-blur-md">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 py-3">
         <Link
           href="/"
+          data-egg="brand"
+          title="Click me a few times"
           className="display text-lg font-bold tracking-tight text-ink"
         >
           Prabal Kalia

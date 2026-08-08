@@ -64,21 +64,6 @@ export function ScrollAnimations() {
             },
           );
         });
-
-      gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
-        const speed = Number(el.dataset.parallax ?? "0.12");
-        const amount = Number.isFinite(speed) ? speed * 80 : 12;
-        gsap.to(el, {
-          y: amount,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el.parentElement ?? el,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      });
     },
     { dependencies: [pathname], revertOnUpdate: true },
   );

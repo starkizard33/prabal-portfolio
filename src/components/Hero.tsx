@@ -3,20 +3,17 @@ import { profile } from "@/data/profile";
 
 export function Hero() {
   return (
-    <section className="section-pad relative min-h-[100svh] overflow-hidden">
+    <section
+      id="hero"
+      className="section-pad relative min-h-[100svh] overflow-hidden bg-transparent"
+    >
       <div
         aria-hidden
-        data-parallax="0.08"
-        className="blueprint-grid pointer-events-none absolute inset-0"
+        className="blueprint-grid pointer-events-none absolute inset-0 opacity-55"
       />
       <div
         aria-hidden
-        data-parallax="0.14"
-        className="blueprint-grid-drift pointer-events-none absolute -inset-[8%] opacity-40"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[color-mix(in_oklab,var(--paper)_88%,transparent)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[color-mix(in_oklab,var(--paper)_55%,transparent)] to-transparent"
       />
 
       <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end gap-10 pb-16 pt-28 md:justify-center md:pb-24 md:pt-24">
@@ -25,7 +22,10 @@ export function Hero() {
             <p className="animate-rise font-mono text-xs uppercase tracking-[0.28em] text-steel">
               {profile.title}
             </p>
-            <h1 className="display animate-rise-delay-1 mt-4 text-[clamp(3.6rem,11vw,7rem)] leading-[0.9] font-extrabold tracking-tight text-ink">
+            <h1
+              data-egg="brand"
+              className="display animate-rise-delay-1 mt-4 text-[clamp(3.6rem,11vw,7rem)] leading-[0.9] font-extrabold tracking-tight text-ink"
+            >
               Prabal
               <br />
               Kalia
@@ -50,7 +50,7 @@ export function Hero() {
           </div>
 
           <aside className="animate-rise-delay-2 relative w-full max-w-md self-end lg:max-w-none lg:self-center">
-            <div className="stack-plaque relative border border-[color-mix(in_oklab,var(--blueprint)_28%,transparent)] bg-white/55 p-7 shadow-[0_24px_60px_rgba(18,36,58,0.08)] backdrop-blur-md md:p-8">
+            <div className="relative border border-[color-mix(in_oklab,var(--blueprint)_28%,transparent)] bg-white/55 p-7 shadow-[0_24px_60px_rgba(18,36,58,0.08)] backdrop-blur-md md:p-8">
               <div
                 aria-hidden
                 className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[var(--blueprint)] to-transparent opacity-50"

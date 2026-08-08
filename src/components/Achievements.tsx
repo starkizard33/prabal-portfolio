@@ -4,7 +4,7 @@ export function Achievements() {
   return (
     <section
       id="achievements"
-      className="section-pad scroll-mt-24 py-16 md:py-24"
+      className="work-section section-pad scroll-mt-24 py-16 md:py-24"
     >
       <div className="mx-auto max-w-6xl">
         <div data-animate="fade-up">
@@ -23,6 +23,13 @@ export function Achievements() {
             <li
               key={`${item.title}-${item.detail}`}
               className="bg-[color-mix(in_oklab,var(--paper)_92%,white)] px-5 py-4"
+              title={
+                item.title.toLowerCase().includes("outstanding")
+                  ? "Try ?egg=joke for a dad joke"
+                  : item.title.toLowerCase().includes("world")
+                    ? "Try ?egg=blackjack"
+                    : undefined
+              }
             >
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-steel">
                 {item.when}

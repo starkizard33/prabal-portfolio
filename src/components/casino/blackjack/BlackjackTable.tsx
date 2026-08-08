@@ -31,6 +31,7 @@ import {
   shouldTakeInsurance,
 } from "@/casino/engine/strategy/illustrious18";
 import { useCasinoSession } from "@/casino/session/CasinoSessionContext";
+import { fireConfetti } from "@/components/fx/confetti";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CountPanel } from "./CountPanel";
 import { Playmat } from "./Playmat";
@@ -291,6 +292,9 @@ export function BlackjackTable() {
     adjustBankroll(pl + returned);
     recordHand();
     setMessage(`${next.message} · P/L ${pl >= 0 ? "+" : ""}${pl}`);
+    if (pl > 0) {
+      fireConfetti({ count: 70 });
+    }
   }
 
   function commit(next: BjState, note?: string) {

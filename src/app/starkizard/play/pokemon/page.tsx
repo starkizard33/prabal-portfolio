@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Guess the Pokémon · Starkizard",
-  description: "Silhouette challenge — Neon Void hangar mini-game.",
+  description:
+    "National Pokédex silhouette quiz with progressive hints and Pokédex fun facts.",
 };
 
 export default function PokemonPlayPage() {
@@ -12,7 +13,7 @@ export default function PokemonPlayPage() {
     <PlayShell
       eyebrow="Neon Void · Play"
       title="Guess the Pokémon"
-      blurb="Silhouette first. Name the species. Chain streaks for bonus points."
+      blurb="Full national dex. Misses unlock region → type → # → name shape. Nailing it shows a fun fact."
     >
       <GuessPokemon />
     </PlayShell>

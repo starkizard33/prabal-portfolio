@@ -9,7 +9,7 @@ export function Skills() {
   ];
 
   return (
-    <section id="skills" className="section-pad scroll-mt-24 py-16 md:py-24">
+    <section id="skills" className="work-section section-pad scroll-mt-24 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
         <div data-animate="fade-up">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">

@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Next.js Runtime (OpenNext) is auto-installed by Netlify — no plugin pin needed.

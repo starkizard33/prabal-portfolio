@@ -2,7 +2,7 @@ import { profile } from "@/data/profile";
 
 export function Contact() {
   return (
-    <section id="contact" className="section-pad scroll-mt-24 py-20 md:py-28">
+    <section id="contact" className="work-section section-pad scroll-mt-24 py-20 md:py-28">
       <div
         data-animate="fade-up"
         className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-ink/10 bg-ink text-mist"

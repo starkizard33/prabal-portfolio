@@ -1,183 +1,60 @@
 "use client";
 
+import { fireConfetti } from "@/components/fx/confetti";
 import { fuzzyMatch } from "@/components/starkizard/games/normalizeGuess";
-import { useMemo, useState, type FormEvent } from "react";
+import { GuessScoreboard } from "@/components/starkizard/games/GuessScoreboard";
+import { awardGuessPoints } from "@/components/starkizard/games/scoring";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
-const SHOWDOWN = "https://play.pokemonshowdown.com/sprites/ani";
-
-type PokemonEntry = {
-  id: string;
+/** Compact wire format from /data/pokedex.json */
+type SlimDexEntry = {
+  id: number;
   name: string;
-  aliases: string[];
-  sprite: string;
+  types: string[];
+  generation: number;
+  funFact: string;
 };
 
-function megaAliases(base: string, suffix?: string): string[] {
-  const spaced = suffix ? `${base} ${suffix}` : base;
-  const compact = spaced.replace(/\s+/g, "");
-  const hyphen = spaced.replace(/\s+/g, "-");
-  return [
-    `mega ${spaced}`,
-    `${spaced} mega`,
-    `mega${compact}`,
-    `${hyphen}-mega`,
-    ...(suffix
-      ? [
-          `mega ${base} ${suffix}`,
-          `${base} ${suffix}`,
-          `${base}-mega${suffix}`,
-          `mega${base}${suffix}`,
-        ]
-      : [`${base}-mega`]),
-  ];
+export type PokedexEntry = SlimDexEntry & {
+  aliases: string[];
+  region: string;
+  sprite: string;
+  spriteFallback: string;
+};
+
+const GEN_REGION: Record<number, string> = {
+  1: "Kanto",
+  2: "Johto",
+  3: "Hoenn",
+  4: "Sinnoh",
+  5: "Unova",
+  6: "Kalos",
+  7: "Alola",
+  8: "Galar",
+  9: "Paldea",
+};
+
+const ARTWORK =
+  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
+const SPRITE =
+  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+
+function aliasesFor(name: string): string[] {
+  const lower = name.toLowerCase();
+  const noPunct = lower.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  const joined = noPunct.replace(/\s+/g, "");
+  return Array.from(new Set([lower, noPunct, joined].filter(Boolean)));
 }
 
-const POKEDEX: PokemonEntry[] = [
-  {
-    id: "mega-charizard-y",
-    name: "Mega Charizard Y",
-    aliases: [...megaAliases("charizard", "y"), "charizard-megay", "megacharizardy"],
-    sprite: "/sprites/mega-charizard-y.gif",
-  },
-  {
-    id: "mega-charizard-x",
-    name: "Mega Charizard X",
-    aliases: [...megaAliases("charizard", "x"), "charizard-megax", "megacharizardx"],
-    sprite: `${SHOWDOWN}/charizard-megax.gif`,
-  },
-  {
-    id: "mega-rayquaza",
-    name: "Mega Rayquaza",
-    aliases: megaAliases("rayquaza"),
-    sprite: "/sprites/mega-rayquaza.gif",
-  },
-  {
-    id: "mega-venusaur",
-    name: "Mega Venusaur",
-    aliases: megaAliases("venusaur"),
-    sprite: `${SHOWDOWN}/venusaur-mega.gif`,
-  },
-  {
-    id: "mega-blastoise",
-    name: "Mega Blastoise",
-    aliases: megaAliases("blastoise"),
-    sprite: `${SHOWDOWN}/blastoise-mega.gif`,
-  },
-  {
-    id: "mega-gengar",
-    name: "Mega Gengar",
-    aliases: megaAliases("gengar"),
-    sprite: `${SHOWDOWN}/gengar-mega.gif`,
-  },
-  {
-    id: "mega-lucario",
-    name: "Mega Lucario",
-    aliases: megaAliases("lucario"),
-    sprite: `${SHOWDOWN}/lucario-mega.gif`,
-  },
-  {
-    id: "mega-garchomp",
-    name: "Mega Garchomp",
-    aliases: megaAliases("garchomp"),
-    sprite: `${SHOWDOWN}/garchomp-mega.gif`,
-  },
-  {
-    id: "mega-tyranitar",
-    name: "Mega Tyranitar",
-    aliases: megaAliases("tyranitar"),
-    sprite: `${SHOWDOWN}/tyranitar-mega.gif`,
-  },
-  {
-    id: "mega-mewtwo-x",
-    name: "Mega Mewtwo X",
-    aliases: [...megaAliases("mewtwo", "x"), "mewtwo-megax", "megamewtwox"],
-    sprite: `${SHOWDOWN}/mewtwo-megax.gif`,
-  },
-  {
-    id: "mega-mewtwo-y",
-    name: "Mega Mewtwo Y",
-    aliases: [...megaAliases("mewtwo", "y"), "mewtwo-megay", "megamewtwoy"],
-    sprite: `${SHOWDOWN}/mewtwo-megay.gif`,
-  },
-  {
-    id: "mega-swampert",
-    name: "Mega Swampert",
-    aliases: megaAliases("swampert"),
-    sprite: `${SHOWDOWN}/swampert-mega.gif`,
-  },
-  {
-    id: "mega-blaziken",
-    name: "Mega Blaziken",
-    aliases: megaAliases("blaziken"),
-    sprite: `${SHOWDOWN}/blaziken-mega.gif`,
-  },
-  {
-    id: "mega-sceptile",
-    name: "Mega Sceptile",
-    aliases: megaAliases("sceptile"),
-    sprite: `${SHOWDOWN}/sceptile-mega.gif`,
-  },
-  {
-    id: "mega-gardevoir",
-    name: "Mega Gardevoir",
-    aliases: megaAliases("gardevoir"),
-    sprite: `${SHOWDOWN}/gardevoir-mega.gif`,
-  },
-  {
-    id: "mega-gallade",
-    name: "Mega Gallade",
-    aliases: megaAliases("gallade"),
-    sprite: `${SHOWDOWN}/gallade-mega.gif`,
-  },
-  {
-    id: "mega-salamence",
-    name: "Mega Salamence",
-    aliases: megaAliases("salamence"),
-    sprite: `${SHOWDOWN}/salamence-mega.gif`,
-  },
-  {
-    id: "mega-metagross",
-    name: "Mega Metagross",
-    aliases: megaAliases("metagross"),
-    sprite: `${SHOWDOWN}/metagross-mega.gif`,
-  },
-  {
-    id: "mega-scizor",
-    name: "Mega Scizor",
-    aliases: megaAliases("scizor"),
-    sprite: `${SHOWDOWN}/scizor-mega.gif`,
-  },
-  {
-    id: "mega-absol",
-    name: "Mega Absol",
-    aliases: megaAliases("absol"),
-    sprite: `${SHOWDOWN}/absol-mega.gif`,
-  },
-  {
-    id: "pikachu",
-    name: "Pikachu",
-    aliases: ["pikachu"],
-    sprite: `${SHOWDOWN}/pikachu.gif`,
-  },
-  {
-    id: "eevee",
-    name: "Eevee",
-    aliases: ["eevee"],
-    sprite: `${SHOWDOWN}/eevee.gif`,
-  },
-  {
-    id: "greninja",
-    name: "Greninja",
-    aliases: ["greninja"],
-    sprite: `${SHOWDOWN}/greninja.gif`,
-  },
-  {
-    id: "dragonite",
-    name: "Dragonite",
-    aliases: ["dragonite"],
-    sprite: `${SHOWDOWN}/dragonite.gif`,
-  },
-];
+function hydrateEntry(entry: SlimDexEntry): PokedexEntry {
+  return {
+    ...entry,
+    aliases: aliasesFor(entry.name),
+    region: GEN_REGION[entry.generation] || "Unknown",
+    sprite: `${ARTWORK}/${entry.id}.png`,
+    spriteFallback: `${SPRITE}/${entry.id}.png`,
+  };
+}
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -188,55 +65,140 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
+type HintTier = 0 | 1 | 2 | 3 | 4;
+
 export function GuessPokemon() {
-  const deck = useMemo(() => shuffle(POKEDEX), []);
+  const [dex, setDex] = useState<PokedexEntry[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [guess, setGuess] = useState("");
+  const [fails, setFails] = useState<HintTier>(0);
   const [revealed, setRevealed] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [spriteSrc, setSpriteSrc] = useState<string | null>(null);
 
-  const current = deck[index % deck.length];
-  const showSprite = revealed;
-
-  function awardAndAdvance(points: number, message: string) {
-    setScore((s) => s + points);
-    setFeedback(message);
-    setRevealed(true);
-    if (points > 0) {
-      setStreak((prev) => {
-        const next = prev + 1;
-        setBestStreak((best) => Math.max(best, next));
-        return next;
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/pokedex.json")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Could not load Pokédex (${res.status})`);
+        return res.json() as Promise<SlimDexEntry[]>;
+      })
+      .then((data) => {
+        if (!cancelled) setDex(shuffle(data.map(hydrateEntry)));
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setLoadError(err.message || "Failed to load Pokédex");
       });
-    } else {
-      setStreak(0);
-    }
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const current = dex && dex.length > 0 ? dex[index % dex.length] : null;
+
+  useEffect(() => {
+    if (current) setSpriteSrc(current.sprite);
+  }, [current]);
+
+  const showSprite = revealed;
+  const hintRegion = fails >= 1;
+  const hintTypes = fails >= 2;
+  const hintNumber = fails >= 3;
+  const hintPartialName = fails >= 4;
+
+  const partialName = useMemo(() => {
+    if (!current) return "";
+    const letters = current.name.split("");
+    return letters
+      .map((ch, i) => {
+        if (ch === " " || ch === "-" || ch === ".") return ch;
+        if (i === 0 || i === letters.length - 1) return ch;
+        return "·";
+      })
+      .join("");
+  }, [current]);
+
+  const settle = useCallback(
+    (points: number, message: string) => {
+      setScore((s) => s + points);
+      setFeedback(message);
+      setRevealed(true);
+      if (points > 0) {
+        fireConfetti({ count: 80 });
+        setStreak((prev) => {
+          const next = prev + 1;
+          setBestStreak((best) => Math.max(best, next));
+          return next;
+        });
+      } else {
+        setStreak(0);
+      }
+    },
+    [],
+  );
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (revealed) return;
+    if (!current || revealed) return;
     const targets = [current.name, ...current.aliases];
     if (fuzzyMatch(guess, targets)) {
-      awardAndAdvance(100 + streak * 10, `Correct — ${current.name}!`);
-    } else {
-      setFeedback("Not quite. Try again or reveal.");
+      const points = awardGuessPoints(fails, streak);
+      settle(
+        points,
+        `Correct — ${current.name}! (+${points})${fails === 0 ? " First try." : ""}`,
+      );
+      return;
     }
+
+    if (fails >= 4) {
+      settle(0, `It was ${current.name}. ${current.funFact}`);
+      return;
+    }
+
+    const next = (fails + 1) as HintTier;
+    setFails(next);
+    setGuess("");
+    const messages: Record<HintTier, string> = {
+      0: "Not quite.",
+      1: "Hint unlocked: home region.",
+      2: "Hint unlocked: typing.",
+      3: "Hint unlocked: National Pokédex number.",
+      4: "Last hint: partial name. One more miss reveals it.",
+    };
+    setFeedback(messages[next]);
   }
 
   function handleReveal() {
-    if (revealed) return;
-    awardAndAdvance(0, `It was ${current.name}.`);
+    if (!current || revealed) return;
+    settle(0, `It was ${current.name}.`);
   }
 
   function handleNext() {
     setIndex((i) => i + 1);
     setGuess("");
+    setFails(0);
     setRevealed(false);
     setFeedback(null);
+  }
+
+  if (loadError) {
+    return (
+      <p className="border border-sz-ember/40 bg-sz-panel/50 p-6 text-sm text-sz-ember">
+        {loadError}
+      </p>
+    );
+  }
+
+  if (!current) {
+    return (
+      <p className="border border-white/10 bg-sz-panel/50 p-6 text-sm text-sz-mist/60">
+        Loading national Pokédex…
+      </p>
+    );
   }
 
   return (
@@ -261,10 +223,15 @@ export function GuessPokemon() {
           ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={current.sprite}
+            src={spriteSrc || current.sprite}
             alt={showSprite ? current.name : "Mystery Pokémon silhouette"}
             width={220}
             height={220}
+            onError={() => {
+              if (spriteSrc !== current.spriteFallback) {
+                setSpriteSrc(current.spriteFallback);
+              }
+            }}
             className={`image-pixelated relative h-[min(48vw,220px)] w-auto transition duration-500 ${
               showSprite
                 ? "drop-shadow-[0_0_28px_rgba(61,255,154,0.45)]"
@@ -280,6 +247,55 @@ export function GuessPokemon() {
             {showSprite ? current.name : "Who's that Pokémon?"}
           </p>
         </div>
+
+        {!revealed ? (
+          <ul className="mt-5 space-y-2 text-sm text-sz-mist/70">
+            {hintRegion ? (
+              <li>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-sz-mist/40">
+                  Region
+                </span>{" "}
+                <span className="text-sz-jade">{current.region}</span>
+                <span className="text-sz-mist/40"> · Gen {current.generation}</span>
+              </li>
+            ) : null}
+            {hintTypes ? (
+              <li>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-sz-mist/40">
+                  Type
+                </span>{" "}
+                <span className="text-sz-gold">{current.types.join(" / ")}</span>
+              </li>
+            ) : null}
+            {hintNumber ? (
+              <li>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-sz-mist/40">
+                  National dex
+                </span>{" "}
+                <span className="text-sz-mist">#{String(current.id).padStart(4, "0")}</span>
+              </li>
+            ) : null}
+            {hintPartialName ? (
+              <li>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-sz-mist/40">
+                  Name shape
+                </span>{" "}
+                <span className="font-mono tracking-[0.18em] text-sz-mist">{partialName}</span>
+              </li>
+            ) : null}
+            {!hintRegion ? (
+              <li className="text-sz-mist/40">Miss to unlock hints: region → type → # → name shape.</li>
+            ) : null}
+          </ul>
+        ) : (
+          <p className="mt-5 text-sm leading-relaxed text-sz-mist/70">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-sz-jade/70">
+              Fun fact
+            </span>
+            <br />
+            {current.funFact}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
           <input
@@ -325,29 +341,19 @@ export function GuessPokemon() {
         ) : null}
       </div>
 
-      <aside className="border border-white/10 bg-sz-panel/40 p-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-sz-mist/45">
-          Scoreboard
-        </p>
-        <dl className="mt-4 space-y-4">
-          <div className="flex items-end justify-between border-b border-white/8 pb-3">
-            <dt className="text-sm text-sz-mist/60">Total</dt>
-            <dd className="display text-3xl font-bold text-sz-jade">{score}</dd>
-          </div>
-          <div className="flex items-end justify-between border-b border-white/8 pb-3">
-            <dt className="text-sm text-sz-mist/60">Streak</dt>
-            <dd className="display text-2xl font-bold text-sz-gold">{streak}</dd>
-          </div>
-          <div className="flex items-end justify-between">
-            <dt className="text-sm text-sz-mist/60">Best streak</dt>
-            <dd className="display text-xl font-bold text-sz-mist">{bestStreak}</dd>
-          </div>
-        </dl>
-        <p className="mt-6 text-xs leading-relaxed text-sz-mist/40">
-          Silhouette on a light board until you nail it. Fan sprites via Showdown
-          · Pokémon © Nintendo / Creatures / GAME FREAK.
-        </p>
-      </aside>
+      <GuessScoreboard
+        score={score}
+        streak={streak}
+        bestStreak={bestStreak}
+        extras={[{ label: "Dex size", value: dex?.length ?? "—" }]}
+        stepNoun="miss (hint unlock)"
+        footer={
+          <>
+            Full national dex (all gens). Sprites via PokeAPI · Pokémon © Nintendo /
+            Creatures / GAME FREAK.
+          </>
+        }
+      />
     </div>
   );
 }

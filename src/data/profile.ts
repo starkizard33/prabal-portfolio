@@ -190,14 +190,16 @@ export const profile = {
     {
       id: "pokemon",
       name: "Pokémon",
-      blurb: "Mega Charizard Y + Mega Rayquaza in the neon. Silhouette challenge ready.",
+      blurb:
+        "Full national dex silhouettes, progressive hints, and a Pokédex fun fact when you land it.",
       href: "/starkizard/play/pokemon",
       cta: "Guess the Pokémon →",
     },
     {
       id: "linkin-park",
       name: "Linkin Park",
-      blurb: "Hybrid Theory through whatever era is blasting today.",
+      blurb:
+        "Lyrics anytime — or progressive audio clips (1s → 30s via iTunes preview), endless shuffle.",
       href: "/starkizard/play/linkin-park",
       cta: "Guess the song →",
     },

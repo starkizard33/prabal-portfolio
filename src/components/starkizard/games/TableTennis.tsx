@@ -1,5 +1,6 @@
 "use client";
 
+import { fireConfetti } from "@/components/fx/confetti";
 import { useEffect, useRef, useState } from "react";
 
 const W = 760;
@@ -268,6 +269,7 @@ export function TableTennis() {
             matchOver = true;
             setOver(true);
             setStatus("You win — filthy spin.");
+            fireConfetti({ count: 100 });
           } else {
             resetBall(true);
           }

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "build:pokedex": "node scripts/build-pokedex.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -11,7 +11,7 @@ import { Skills } from "@/components/Skills";
 
 export default function HomePage() {
   return (
-    <div className="pro-atmosphere flex min-h-full flex-1 flex-col">
+    <div className="pro-atmosphere relative flex min-h-full flex-1 flex-col">
       <SiteNav />
       <main className="flex-1">
         <Hero />
