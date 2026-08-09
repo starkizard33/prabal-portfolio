@@ -12,48 +12,152 @@ type PokemonEntry = {
   sprite: string;
 };
 
+function megaAliases(base: string, suffix?: string): string[] {
+  const spaced = suffix ? `${base} ${suffix}` : base;
+  const compact = spaced.replace(/\s+/g, "");
+  const hyphen = spaced.replace(/\s+/g, "-");
+  return [
+    `mega ${spaced}`,
+    `${spaced} mega`,
+    `mega${compact}`,
+    `${hyphen}-mega`,
+    ...(suffix
+      ? [
+          `mega ${base} ${suffix}`,
+          `${base} ${suffix}`,
+          `${base}-mega${suffix}`,
+          `mega${base}${suffix}`,
+        ]
+      : [`${base}-mega`]),
+  ];
+}
+
 const POKEDEX: PokemonEntry[] = [
+  {
+    id: "mega-charizard-y",
+    name: "Mega Charizard Y",
+    aliases: [...megaAliases("charizard", "y"), "charizard-megay", "megacharizardy"],
+    sprite: "/sprites/mega-charizard-y.gif",
+  },
+  {
+    id: "mega-charizard-x",
+    name: "Mega Charizard X",
+    aliases: [...megaAliases("charizard", "x"), "charizard-megax", "megacharizardx"],
+    sprite: `${SHOWDOWN}/charizard-megax.gif`,
+  },
+  {
+    id: "mega-rayquaza",
+    name: "Mega Rayquaza",
+    aliases: megaAliases("rayquaza"),
+    sprite: "/sprites/mega-rayquaza.gif",
+  },
+  {
+    id: "mega-venusaur",
+    name: "Mega Venusaur",
+    aliases: megaAliases("venusaur"),
+    sprite: `${SHOWDOWN}/venusaur-mega.gif`,
+  },
+  {
+    id: "mega-blastoise",
+    name: "Mega Blastoise",
+    aliases: megaAliases("blastoise"),
+    sprite: `${SHOWDOWN}/blastoise-mega.gif`,
+  },
+  {
+    id: "mega-gengar",
+    name: "Mega Gengar",
+    aliases: megaAliases("gengar"),
+    sprite: `${SHOWDOWN}/gengar-mega.gif`,
+  },
+  {
+    id: "mega-lucario",
+    name: "Mega Lucario",
+    aliases: megaAliases("lucario"),
+    sprite: `${SHOWDOWN}/lucario-mega.gif`,
+  },
+  {
+    id: "mega-garchomp",
+    name: "Mega Garchomp",
+    aliases: megaAliases("garchomp"),
+    sprite: `${SHOWDOWN}/garchomp-mega.gif`,
+  },
+  {
+    id: "mega-tyranitar",
+    name: "Mega Tyranitar",
+    aliases: megaAliases("tyranitar"),
+    sprite: `${SHOWDOWN}/tyranitar-mega.gif`,
+  },
+  {
+    id: "mega-mewtwo-x",
+    name: "Mega Mewtwo X",
+    aliases: [...megaAliases("mewtwo", "x"), "mewtwo-megax", "megamewtwox"],
+    sprite: `${SHOWDOWN}/mewtwo-megax.gif`,
+  },
+  {
+    id: "mega-mewtwo-y",
+    name: "Mega Mewtwo Y",
+    aliases: [...megaAliases("mewtwo", "y"), "mewtwo-megay", "megamewtwoy"],
+    sprite: `${SHOWDOWN}/mewtwo-megay.gif`,
+  },
+  {
+    id: "mega-swampert",
+    name: "Mega Swampert",
+    aliases: megaAliases("swampert"),
+    sprite: `${SHOWDOWN}/swampert-mega.gif`,
+  },
+  {
+    id: "mega-blaziken",
+    name: "Mega Blaziken",
+    aliases: megaAliases("blaziken"),
+    sprite: `${SHOWDOWN}/blaziken-mega.gif`,
+  },
+  {
+    id: "mega-sceptile",
+    name: "Mega Sceptile",
+    aliases: megaAliases("sceptile"),
+    sprite: `${SHOWDOWN}/sceptile-mega.gif`,
+  },
+  {
+    id: "mega-gardevoir",
+    name: "Mega Gardevoir",
+    aliases: megaAliases("gardevoir"),
+    sprite: `${SHOWDOWN}/gardevoir-mega.gif`,
+  },
+  {
+    id: "mega-gallade",
+    name: "Mega Gallade",
+    aliases: megaAliases("gallade"),
+    sprite: `${SHOWDOWN}/gallade-mega.gif`,
+  },
+  {
+    id: "mega-salamence",
+    name: "Mega Salamence",
+    aliases: megaAliases("salamence"),
+    sprite: `${SHOWDOWN}/salamence-mega.gif`,
+  },
+  {
+    id: "mega-metagross",
+    name: "Mega Metagross",
+    aliases: megaAliases("metagross"),
+    sprite: `${SHOWDOWN}/metagross-mega.gif`,
+  },
+  {
+    id: "mega-scizor",
+    name: "Mega Scizor",
+    aliases: megaAliases("scizor"),
+    sprite: `${SHOWDOWN}/scizor-mega.gif`,
+  },
+  {
+    id: "mega-absol",
+    name: "Mega Absol",
+    aliases: megaAliases("absol"),
+    sprite: `${SHOWDOWN}/absol-mega.gif`,
+  },
   {
     id: "pikachu",
     name: "Pikachu",
     aliases: ["pikachu"],
     sprite: `${SHOWDOWN}/pikachu.gif`,
-  },
-  {
-    id: "mega-charizard-y",
-    name: "Mega Charizard Y",
-    aliases: ["mega charizard y", "charizard y", "charizard-megay", "megacharizardy"],
-    sprite: "/sprites/mega-charizard-y.gif",
-  },
-  {
-    id: "mega-rayquaza",
-    name: "Mega Rayquaza",
-    aliases: ["mega rayquaza", "rayquaza mega", "megarayquaza"],
-    sprite: "/sprites/mega-rayquaza.gif",
-  },
-  {
-    id: "gengar",
-    name: "Gengar",
-    aliases: ["gengar"],
-    sprite: `${SHOWDOWN}/gengar.gif`,
-  },
-  {
-    id: "lucario",
-    name: "Lucario",
-    aliases: ["lucario"],
-    sprite: `${SHOWDOWN}/lucario.gif`,
-  },
-  {
-    id: "garchomp",
-    name: "Garchomp",
-    aliases: ["garchomp"],
-    sprite: `${SHOWDOWN}/garchomp.gif`,
-  },
-  {
-    id: "greninja",
-    name: "Greninja",
-    aliases: ["greninja"],
-    sprite: `${SHOWDOWN}/greninja.gif`,
   },
   {
     id: "eevee",
@@ -62,46 +166,16 @@ const POKEDEX: PokemonEntry[] = [
     sprite: `${SHOWDOWN}/eevee.gif`,
   },
   {
-    id: "snorlax",
-    name: "Snorlax",
-    aliases: ["snorlax"],
-    sprite: `${SHOWDOWN}/snorlax.gif`,
+    id: "greninja",
+    name: "Greninja",
+    aliases: ["greninja"],
+    sprite: `${SHOWDOWN}/greninja.gif`,
   },
   {
     id: "dragonite",
     name: "Dragonite",
     aliases: ["dragonite"],
     sprite: `${SHOWDOWN}/dragonite.gif`,
-  },
-  {
-    id: "blastoise",
-    name: "Blastoise",
-    aliases: ["blastoise"],
-    sprite: `${SHOWDOWN}/blastoise.gif`,
-  },
-  {
-    id: "venusaur",
-    name: "Venusaur",
-    aliases: ["venusaur"],
-    sprite: `${SHOWDOWN}/venusaur.gif`,
-  },
-  {
-    id: "mewtwo",
-    name: "Mewtwo",
-    aliases: ["mewtwo"],
-    sprite: `${SHOWDOWN}/mewtwo.gif`,
-  },
-  {
-    id: "umbreon",
-    name: "Umbreon",
-    aliases: ["umbreon"],
-    sprite: `${SHOWDOWN}/umbreon.gif`,
-  },
-  {
-    id: "tyranitar",
-    name: "Tyranitar",
-    aliases: ["tyranitar"],
-    sprite: `${SHOWDOWN}/tyranitar.gif`,
   },
 ];
 
