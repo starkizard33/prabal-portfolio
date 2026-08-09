@@ -2,8 +2,7 @@ import Link from "next/link";
 
 const links = [
   { href: "/starkizard", label: "Hangar" },
-  { href: "/starkizard/blackjack", label: "Blackjack" },
-  { href: "/starkizard/games", label: "Board games" },
+  { href: "/starkizard/casino", label: "Casino" },
 ];
 
 export function StarkizardNav() {

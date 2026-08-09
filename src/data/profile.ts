@@ -213,9 +213,9 @@ export const profile = {
       blurb: "Basic strategy, variance, and a playable table in the hangar.",
     },
     {
-      id: "boardgames",
-      name: "Custom board games",
-      blurb: "Rulesets, prototypes, and games designed from scratch.",
+      id: "casino",
+      name: "Casino",
+      blurb: "Session buy-in, blackjack, and European roulette — Zard chips only.",
     },
   ],
 } as const;
