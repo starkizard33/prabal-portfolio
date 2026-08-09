@@ -252,6 +252,19 @@ body {
   animation: hole-flip 0.35s ease both;
 }
 
+@keyframes roulette-ball-orbit {
+  from {
+    transform: translateX(-50%) rotate(0deg) translateY(0);
+  }
+  to {
+    transform: translateX(-50%) rotate(720deg) translateY(4px);
+  }
+}
+
+.roulette-ball-spin {
+  animation: roulette-ball-orbit 2.8s cubic-bezier(0.12, 0.75, 0.18, 1) both;
+}
+
 .animate-rise {
   animation: rise-in 0.8s ease both;
 }
@@ -308,7 +321,8 @@ body {
   .blueprint-grid-drift,
   .stack-plaque,
   .bj-deal-in,
-  .bj-hole-flip {
+  .bj-hole-flip,
+  .roulette-ball-spin {
     animation: none !important;
   }
 }
