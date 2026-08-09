@@ -1,6 +1,7 @@
 "use client";
 
 import { fireConfetti } from "@/components/fx/confetti";
+import { GuessAutocomplete } from "@/components/starkizard/games/GuessAutocomplete";
 import { fuzzyMatch } from "@/components/starkizard/games/normalizeGuess";
 import { GuessScoreboard } from "@/components/starkizard/games/GuessScoreboard";
 import { awardGuessPoints } from "@/components/starkizard/games/scoring";
@@ -8,7 +9,7 @@ import {
   LINKIN_PARK_LYRIC_SONGS,
   type LinkinParkSong,
 } from "@/data/linkinParkSongs";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -78,6 +79,11 @@ export function GuessLinkinPark() {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [misses, setMisses] = useState(0);
+
+  const titleOptions = useMemo(
+    () => LINKIN_PARK_LYRIC_SONGS.map((song) => song.title),
+    [],
+  );
 
   useEffect(() => {
     setDeck(buildDeck());
@@ -157,14 +163,12 @@ export function GuessLinkinPark() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <input
+          <GuessAutocomplete
             value={guess}
-            onChange={(e) => setGuess(e.target.value)}
+            onChange={setGuess}
+            options={titleOptions}
             disabled={revealed}
             placeholder="Song title…"
-            className="min-w-0 flex-1 rounded-full border border-white/15 bg-sz-void px-4 py-2.5 text-base text-sz-mist outline-none focus:border-sz-jade/60 disabled:opacity-50"
-            autoComplete="off"
-            spellCheck={false}
           />
           <button
             type="submit"

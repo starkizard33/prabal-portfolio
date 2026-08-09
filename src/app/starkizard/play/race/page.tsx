@@ -13,7 +13,7 @@ export default function RacePlayPage() {
     <PlayShell
       eyebrow="Neon Void · Play"
       title="Circuit Race"
-      blurb="Pick a circuit or draw your own. Tap Start on phone or press Enter on desktop for a five-light start — timer begins on lights out. 3 laps, gentler throttle, ghost on each layout."
+      blurb="Three circuits or draw your own. Free drive with soft walls — pass green gates in order, then SF. No reverse. 3 laps + ghost."
     >
       <CircuitRace />
     </PlayShell>
