@@ -13,9 +13,11 @@ export type StrategyInput = {
 };
 
 /** Chart cell: action plus soft double / surrender fallbacks. */
-type Cell = StrategyAction | "Dh" | "Ds" | "Rh" | "Rp";
+export type ChartCell = StrategyAction | "Dh" | "Ds" | "Rh" | "Rp";
 
-type UpCol = "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "A";
+type Cell = ChartCell;
+
+export type UpCol = "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "A";
 
 function upCol(rank: Rank): UpCol {
   if (rank === "J" || rank === "Q" || rank === "K") return "10";
@@ -53,7 +55,7 @@ function resolveCell(
 }
 
 /** Multi-deck S17 + DAS + late surrender — hard totals. */
-const HARD: Record<number, Record<UpCol, Cell>> = {
+export const HARD_CHART: Record<number, Record<UpCol, Cell>> = {
   21: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
   20: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
   19: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
@@ -75,7 +77,7 @@ const HARD: Record<number, Record<UpCol, Cell>> = {
 };
 
 /** Soft totals (A + N). Keys are soft totals 13–21. */
-const SOFT: Record<number, Record<UpCol, Cell>> = {
+export const SOFT_CHART: Record<number, Record<UpCol, Cell>> = {
   21: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
   20: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
   19: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
@@ -91,7 +93,7 @@ const SOFT: Record<number, Record<UpCol, Cell>> = {
  * Pair chart. Tens share "T"; fives omit (hard 10).
  * Educational approximation of multi-deck S17 DAS LS (Wizard of Odds / Apprentice-equivalent).
  */
-const PAIRS: Record<string, Record<UpCol, Cell>> = {
+export const PAIRS_CHART: Record<string, Record<UpCol, Cell>> = {
   A: { "2": "P", "3": "P", "4": "P", "5": "P", "6": "P", "7": "P", "8": "P", "9": "P", "10": "P", A: "P" },
   T: { "2": "S", "3": "S", "4": "S", "5": "S", "6": "S", "7": "S", "8": "S", "9": "S", "10": "S", A: "S" },
   "9": { "2": "P", "3": "P", "4": "P", "5": "P", "6": "P", "7": "S", "8": "P", "9": "P", "10": "S", A: "S" },
@@ -117,11 +119,11 @@ function hardOrSoft(input: StrategyInput, up: UpCol): StrategyAction {
     canSplit: input.canSplit,
   };
   if (input.soft) {
-    const row = SOFT[input.playerTotal] ?? SOFT[13];
+    const row = SOFT_CHART[input.playerTotal] ?? SOFT_CHART[13];
     return resolveCell(row[up], flags);
   }
   const total = Math.min(21, Math.max(4, input.playerTotal));
-  const row = HARD[total] ?? HARD[8];
+  const row = HARD_CHART[total] ?? HARD_CHART[8];
   return resolveCell(row[up], flags);
 }
 
@@ -140,7 +142,7 @@ export function basicStrategy(input: StrategyInput): StrategyAction {
   if (input.canSplit && input.pairRank !== undefined) {
     const key = pairKey(input.pairRank);
     if (key !== null) {
-      const cell = PAIRS[key][up];
+      const cell = PAIRS_CHART[key][up];
       if (cell === "P" || cell === "Rp" || cell === "S") {
         return resolveCell(cell, flags);
       }

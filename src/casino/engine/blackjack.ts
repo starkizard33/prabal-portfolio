@@ -326,6 +326,12 @@ function declineInsurance(state: BjState): BjState {
   });
 }
 
+/** Decline insurance without chaining a player action. */
+export function declineInsuranceOffer(state: BjState): BjState {
+  if (state.phase !== "insurance") return state;
+  return declineInsurance(state);
+}
+
 function takeInsurance(state: BjState): BjState {
   const amount = Math.floor(state.baseBet / 2);
   return peekForDealerBlackjack({
