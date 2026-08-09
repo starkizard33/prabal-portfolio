@@ -301,6 +301,10 @@ export function CircuitRace() {
   });
 
   const keys = useRef({ up: false, down: false, left: false, right: false });
+  const controlsRef = useRef<{
+    startOrRestart: () => void;
+    setThrottle: (up: boolean, down: boolean) => void;
+  } | null>(null);
   const ghostByLayout = useRef<Record<string, GhostSample[]>>({});
   const bestByLayout = useRef<Record<string, number | null>>({});
 
@@ -476,30 +480,42 @@ export function CircuitRace() {
       });
     }
 
+    function returnToGrid() {
+      stage = "awaiting";
+      resetOnGrid();
+      const hasGhost = (ghostByLayout.current[layoutKey]?.length ?? 0) > 1;
+      setHud({
+        lap: 1,
+        time: 0,
+        finished: false,
+        status: hasGhost
+          ? "Ghost ready · Press Enter for lights"
+          : "Press Enter — five red lights, then lights out",
+        best: bestByLayout.current[layoutKey] ?? null,
+        lights: 0,
+        dimmed: true,
+        awaitingEnter: true,
+      });
+    }
+
+    function startOrRestart() {
+      if (stage === "awaiting") beginLights();
+      else if (stage === "finished") returnToGrid();
+    }
+
+    controlsRef.current = {
+      startOrRestart,
+      setThrottle: (up, down) => {
+        keys.current.up = up;
+        keys.current.down = down;
+      },
+    };
+
     function onKey(e: KeyboardEvent, down: boolean) {
       if (down && (e.key === "Enter" || e.code === "Enter" || e.code === "NumpadEnter")) {
-        if (stage === "awaiting") {
+        if (stage === "awaiting" || stage === "finished") {
           e.preventDefault();
-          beginLights();
-          return;
-        }
-        if (stage === "finished") {
-          e.preventDefault();
-          stage = "awaiting";
-          resetOnGrid();
-          const hasGhost = (ghostByLayout.current[layoutKey]?.length ?? 0) > 1;
-          setHud({
-            lap: 1,
-            time: 0,
-            finished: false,
-            status: hasGhost
-              ? "Ghost ready · Press Enter for lights"
-              : "Press Enter — five red lights, then lights out",
-            best: bestByLayout.current[layoutKey] ?? null,
-            lights: 0,
-            dimmed: true,
-            awaitingEnter: true,
-          });
+          startOrRestart();
           return;
         }
       }
@@ -813,6 +829,7 @@ export function CircuitRace() {
       cancelAnimationFrame(raf);
       window.removeEventListener("keydown", keyDown);
       window.removeEventListener("keyup", keyUp);
+      controlsRef.current = null;
     };
   }, [runId, phase, activeLayout]);
 
@@ -870,7 +887,7 @@ export function CircuitRace() {
               Draw centerline
             </p>
             <p className="mt-1 text-sm text-sz-mist/70">
-              Click to add points · undo / clear · close &amp; race
+              Tap or click to add points · undo / clear · close &amp; race
             </p>
           </div>
           <button
@@ -962,10 +979,59 @@ export function CircuitRace() {
         className="w-full rounded-2xl border border-sz-ember/30 bg-sz-void shadow-[0_0_40px_rgba(255,107,44,0.1)] outline-none focus:border-sz-gold/50"
         aria-label={`${activeLayout?.name ?? "Circuit"} track`}
       />
-      <p className="text-xs text-sz-mist/40">
+      <div className="grid grid-cols-3 gap-2 md:hidden select-none">
+        <button
+          type="button"
+          className="min-h-14 rounded-2xl border border-sz-mist/25 bg-sz-void/90 text-sm font-semibold"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            controlsRef.current?.setThrottle(false, true);
+          }}
+          onPointerUp={(e) => {
+            e.preventDefault();
+            controlsRef.current?.setThrottle(false, false);
+          }}
+          onPointerLeave={() => controlsRef.current?.setThrottle(false, false)}
+          onPointerCancel={() => controlsRef.current?.setThrottle(false, false)}
+          style={{ touchAction: "none" }}
+        >
+          Brake
+        </button>
+        <button
+          type="button"
+          disabled={!hud.awaitingEnter && !hud.finished}
+          className="min-h-14 rounded-2xl bg-sz-ember text-sm font-semibold text-sz-void disabled:opacity-40"
+          onClick={() => controlsRef.current?.startOrRestart()}
+        >
+          Start
+        </button>
+        <button
+          type="button"
+          className="min-h-14 rounded-2xl border border-sz-jade/40 bg-sz-jade/15 text-sm font-semibold text-sz-jade"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            controlsRef.current?.setThrottle(true, false);
+          }}
+          onPointerUp={(e) => {
+            e.preventDefault();
+            controlsRef.current?.setThrottle(false, false);
+          }}
+          onPointerLeave={() => controlsRef.current?.setThrottle(false, false)}
+          onPointerCancel={() => controlsRef.current?.setThrottle(false, false)}
+          style={{ touchAction: "none" }}
+        >
+          Gas
+        </button>
+      </div>
+      <p className="text-xs text-sz-mist/40 md:hidden">
         {hud.awaitingEnter
-          ? "Screen dims · Press Enter for the five-light start (timer begins on lights out)."
-          : `3 laps · gentler throttle · wall hits dump speed · ▲/W gas · ▼/S brake.`}
+          ? "Tap Start for lights (timer begins on lights out)."
+          : "Hold Gas / Brake · 3 laps · walls dump speed."}
+      </p>
+      <p className="hidden text-xs text-sz-mist/40 md:block">
+        {hud.awaitingEnter
+          ? "Screen dims · Press Enter for the five-light start."
+          : "3 laps · ▲/W gas · ▼/S brake · wall hits dump speed."}
       </p>
     </div>
   );
