@@ -13,7 +13,7 @@ export default function RacePlayPage() {
     <PlayShell
       eyebrow="Neon Void · Play"
       title="Circuit Race"
-      blurb="Choose a preset (Red Bull Ring, figure-eight, hairpins, speed bowl) or draw your own centerline. Wide track, hard wall slowdown, ghost laps — WASD or arrows."
+      blurb="Pick a circuit or draw your own. Press Enter for a five-light start — timer begins on lights out. 5 laps, gentler throttle, ghost on each layout."
     >
       <CircuitRace />
     </PlayShell>

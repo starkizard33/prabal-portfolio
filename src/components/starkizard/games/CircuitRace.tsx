@@ -4,8 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const W = 860;
 const H = 560;
-const LAPS = 2;
+const LAPS = 5;
 const TRACK_HALF = 40;
+/** Throttle / coast / brake feel — deliberately gradual. */
+const ACCEL = 0.085;
+const COAST = 0.991;
+const BRAKE = 0.2;
+const MAX_SPEED = 5.6;
+const LIGHT_INTERVAL_MS = 700;
 
 type Pt = { x: number; y: number; label?: string };
 
@@ -286,8 +292,11 @@ export function CircuitRace() {
     lap: 1,
     time: 0,
     best: null as number | null,
-    status: "Ready — WASD / arrows",
+    status: "Press Enter for lights out",
     finished: false,
+    lights: 0,
+    dimmed: true,
+    awaitingEnter: true,
   });
 
   const keys = useRef({ up: false, down: false, left: false, right: false });
@@ -399,6 +408,8 @@ export function CircuitRace() {
     const path = activeLayout.points;
     const layoutKey = activeLayout.id;
 
+    type RaceStage = "awaiting" | "lights" | "racing" | "finished";
+
     const startPose = samplePath(path, 0.01);
     const car = {
       x: startPose.x,
@@ -407,12 +418,15 @@ export function CircuitRace() {
       speed: 0,
       lastProgress: 0.01,
       lap: 1,
-      start: performance.now(),
+      start: 0,
     };
     const recording: GhostSample[] = [];
     const sparks: { x: number; y: number; life: number; vx: number; vy: number }[] =
       [];
-    let done = false;
+    let stage: RaceStage = "awaiting";
+    let lightsOn = 0;
+    let lightTimer = 0;
+    let goFlash = 0;
     const ghost = ghostByLayout.current[layoutKey] ?? [];
     const best = bestByLayout.current[layoutKey] ?? null;
 
@@ -420,11 +434,70 @@ export function CircuitRace() {
       lap: 1,
       time: 0,
       finished: false,
-      status: `${activeLayout.name} — hold ▲ / W to punch it`,
+      status: "Press Enter — five red lights, then lights out",
       best,
+      lights: 0,
+      dimmed: true,
+      awaitingEnter: true,
     });
 
+    function resetOnGrid() {
+      const pose = samplePath(path, 0.01);
+      car.x = pose.x;
+      car.y = pose.y;
+      car.angle = pose.angle;
+      car.speed = 0;
+      car.lastProgress = 0.01;
+      car.lap = 1;
+      car.start = 0;
+      recording.length = 0;
+      sparks.length = 0;
+      lightsOn = 0;
+      lightTimer = 0;
+      goFlash = 0;
+      keys.current = { up: false, down: false, left: false, right: false };
+    }
+
+    function beginLights() {
+      resetOnGrid();
+      stage = "lights";
+      setHud({
+        lap: 1,
+        time: 0,
+        finished: false,
+        status: "Lights…",
+        best: bestByLayout.current[layoutKey] ?? null,
+        lights: 0,
+        dimmed: false,
+        awaitingEnter: false,
+      });
+    }
+
     function onKey(e: KeyboardEvent, down: boolean) {
+      if (down && (e.key === "Enter" || e.code === "Enter" || e.code === "NumpadEnter")) {
+        if (stage === "awaiting") {
+          e.preventDefault();
+          beginLights();
+          return;
+        }
+        if (stage === "finished") {
+          e.preventDefault();
+          stage = "awaiting";
+          resetOnGrid();
+          setHud({
+            lap: 1,
+            time: 0,
+            finished: false,
+            status: "Press Enter — five red lights, then lights out",
+            best: bestByLayout.current[layoutKey] ?? null,
+            lights: 0,
+            dimmed: true,
+            awaitingEnter: true,
+          });
+          return;
+        }
+      }
+
       const map: Record<string, keyof typeof keys.current> = {
         ArrowUp: "up",
         ArrowDown: "down",
@@ -441,6 +514,10 @@ export function CircuitRace() {
       };
       const k = map[e.key];
       if (k) {
+        if (stage !== "racing") {
+          if (down) e.preventDefault();
+          return;
+        }
         keys.current[k] = down;
         e.preventDefault();
       }
@@ -468,22 +545,83 @@ export function CircuitRace() {
       }
     }
 
+    function drawLightsOverlay(count: number, extinguishing: boolean) {
+      const panelW = 280;
+      const panelH = 56;
+      const cx = W / 2;
+      const cy = H * 0.22;
+      draw.fillStyle = "rgba(8,10,14,0.78)";
+      draw.beginPath();
+      const x0 = cx - panelW / 2;
+      const y0 = cy - panelH / 2;
+      const r = 12;
+      draw.moveTo(x0 + r, y0);
+      draw.arcTo(x0 + panelW, y0, x0 + panelW, y0 + panelH, r);
+      draw.arcTo(x0 + panelW, y0 + panelH, x0, y0 + panelH, r);
+      draw.arcTo(x0, y0 + panelH, x0, y0, r);
+      draw.arcTo(x0, y0, x0 + panelW, y0, r);
+      draw.closePath();
+      draw.fill();
+      const gap = 46;
+      const startX = cx - gap * 2;
+      for (let i = 0; i < 5; i += 1) {
+        const lit = !extinguishing && i < count;
+        draw.beginPath();
+        draw.fillStyle = lit ? "#e10600" : "rgba(60,20,20,0.85)";
+        draw.shadowColor = lit ? "rgba(225,6,0,0.85)" : "transparent";
+        draw.shadowBlur = lit ? 16 : 0;
+        draw.arc(startX + i * gap, cy, 14, 0, Math.PI * 2);
+        draw.fill();
+      }
+      draw.shadowBlur = 0;
+    }
+
     function frame(now: number) {
-      const dt = Math.min(32, now - last) / 16.67;
+      const dtMs = Math.min(32, now - last);
+      const dt = dtMs / 16.67;
       last = now;
 
-      if (!done) {
-        // Hard accel / brake
-        if (keys.current.up) car.speed += 0.28 * dt;
-        if (keys.current.down) car.speed -= 0.32 * dt;
+      if (stage === "lights") {
+        lightTimer += dtMs;
+        while (lightTimer >= LIGHT_INTERVAL_MS && lightsOn < 5) {
+          lightTimer -= LIGHT_INTERVAL_MS;
+          lightsOn += 1;
+          setHud((h) => ({
+            ...h,
+            lights: lightsOn,
+            status: lightsOn < 5 ? `Lights ${lightsOn} / 5` : "Lights out…",
+            dimmed: false,
+            awaitingEnter: false,
+          }));
+        }
+        if (lightsOn >= 5 && lightTimer >= LIGHT_INTERVAL_MS) {
+          stage = "racing";
+          car.start = now;
+          goFlash = 18;
+          setHud({
+            lap: 1,
+            time: 0,
+            finished: false,
+            status: `Lap 1 / ${LAPS}`,
+            best: bestByLayout.current[layoutKey] ?? null,
+            lights: 0,
+            dimmed: false,
+            awaitingEnter: false,
+          });
+        }
+      }
+
+      if (stage === "racing") {
+        if (keys.current.up) car.speed += ACCEL * dt;
+        if (keys.current.down) car.speed -= BRAKE * dt;
         if (keys.current.left) {
-          car.angle -= 0.052 * dt * (0.5 + Math.abs(car.speed) * 0.12);
+          car.angle -= 0.048 * dt * (0.48 + Math.abs(car.speed) * 0.11);
         }
         if (keys.current.right) {
-          car.angle += 0.052 * dt * (0.5 + Math.abs(car.speed) * 0.12);
+          car.angle += 0.048 * dt * (0.48 + Math.abs(car.speed) * 0.11);
         }
-        car.speed *= 0.988;
-        car.speed = Math.max(-3.2, Math.min(8.4, car.speed));
+        car.speed *= COAST;
+        car.speed = Math.max(-2.2, Math.min(MAX_SPEED, car.speed));
         car.x += Math.cos(car.angle) * car.speed * dt;
         car.y += Math.sin(car.angle) * car.speed * dt;
 
@@ -503,7 +641,7 @@ export function CircuitRace() {
         if (delta < -0.55) {
           car.lap += 1;
           if (car.lap > LAPS) {
-            done = true;
+            stage = "finished";
             const elapsed = (now - car.start) / 1000;
             const prevBest = bestByLayout.current[layoutKey] ?? null;
             bestByLayout.current[layoutKey] =
@@ -514,7 +652,10 @@ export function CircuitRace() {
               time: elapsed,
               best: bestByLayout.current[layoutKey] ?? null,
               finished: true,
-              status: `Chequered — ${elapsed.toFixed(2)}s`,
+              status: `Chequered — ${elapsed.toFixed(2)}s · Press Enter`,
+              lights: 0,
+              dimmed: true,
+              awaitingEnter: true,
             });
           }
         }
@@ -528,13 +669,16 @@ export function CircuitRace() {
         });
 
         hudTick += 1;
-        if (!done && hudTick % 6 === 0) {
+        if (stage === "racing" && hudTick % 6 === 0) {
           setHud({
             lap: Math.min(car.lap, LAPS),
             time: (now - car.start) / 1000,
             best: bestByLayout.current[layoutKey] ?? null,
             finished: false,
             status: `Lap ${Math.min(car.lap, LAPS)} / ${LAPS}`,
+            lights: 0,
+            dimmed: false,
+            awaitingEnter: false,
           });
         }
       }
@@ -549,8 +693,11 @@ export function CircuitRace() {
 
       drawTrackScene(draw, path);
 
-      if (ghost.length > 1) {
-        const elapsed = now - car.start;
+      if (ghost.length > 1 && (stage === "racing" || stage === "finished")) {
+        const elapsed =
+          stage === "racing" || stage === "finished"
+            ? Math.max(0, now - (car.start || now))
+            : 0;
         let gi = 0;
         while (gi < ghost.length - 1 && ghost[gi + 1].t < elapsed) {
           gi += 1;
@@ -585,6 +732,48 @@ export function CircuitRace() {
       draw.fillRect(7, -4, 7, 8);
       draw.restore();
 
+      if (stage === "awaiting" || stage === "finished") {
+        draw.fillStyle = "rgba(4, 8, 12, 0.62)";
+        draw.fillRect(0, 0, W, H);
+        draw.fillStyle = "rgba(243,245,248,0.92)";
+        draw.font = "600 22px Syne, system-ui, sans-serif";
+        draw.textAlign = "center";
+        draw.fillText(
+          stage === "finished" ? "Chequered flag" : "On the grid",
+          W / 2,
+          H * 0.42,
+        );
+        draw.font = "14px ui-monospace, monospace";
+        draw.fillStyle = "rgba(240,196,92,0.95)";
+        draw.fillText("Press Enter", W / 2, H * 0.42 + 34);
+        if (stage === "finished") {
+          draw.fillStyle = "rgba(215,231,223,0.65)";
+          draw.fillText(
+            `Ghost armed · next run is ${LAPS} laps`,
+            W / 2,
+            H * 0.42 + 58,
+          );
+        }
+        draw.textAlign = "left";
+      }
+
+      if (stage === "lights") {
+        draw.fillStyle = "rgba(4, 8, 12, 0.28)";
+        draw.fillRect(0, 0, W, H);
+        drawLightsOverlay(lightsOn, false);
+      }
+
+      if (goFlash > 0) {
+        goFlash -= dt;
+        draw.fillStyle = `rgba(61,255,154,${Math.min(0.35, goFlash / 40)})`;
+        draw.fillRect(0, 0, W, H);
+        draw.fillStyle = "rgba(243,245,248,0.95)";
+        draw.font = "700 28px Syne, system-ui, sans-serif";
+        draw.textAlign = "center";
+        draw.fillText("LIGHTS OUT", W / 2, H * 0.28);
+        draw.textAlign = "left";
+      }
+
       raf = requestAnimationFrame(frame);
     }
 
@@ -596,6 +785,12 @@ export function CircuitRace() {
     };
   }, [runId, phase, activeLayout]);
 
+  useEffect(() => {
+    if (phase === "race") {
+      canvasRef.current?.focus();
+    }
+  }, [phase, runId]);
+
   if (phase === "select") {
     return (
       <div className="space-y-5">
@@ -604,8 +799,7 @@ export function CircuitRace() {
             Choose circuit
           </p>
           <p className="mt-1 text-sm text-sz-mist/70">
-            Four presets or sketch your own centerline — then rip laps with
-            ghost.
+            Four presets or sketch your own — 5 laps, lights-out start, ghost.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -733,21 +927,14 @@ export function CircuitRace() {
         ref={canvasRef}
         width={W}
         height={H}
-        className="w-full rounded-2xl border border-sz-ember/30 bg-sz-void shadow-[0_0_40px_rgba(255,107,44,0.1)]"
+        tabIndex={0}
+        className="w-full rounded-2xl border border-sz-ember/30 bg-sz-void shadow-[0_0_40px_rgba(255,107,44,0.1)] outline-none focus:border-sz-gold/50"
         aria-label={`${activeLayout?.name ?? "Circuit"} track`}
       />
-      {hud.finished ? (
-        <button
-          type="button"
-          onClick={() => setRunId((n) => n + 1)}
-          className="rounded-full bg-sz-ember px-5 py-2.5 text-sm font-semibold text-sz-void transition hover:bg-sz-gold"
-        >
-          Another run (ghost on)
-        </button>
-      ) : null}
       <p className="text-xs text-sz-mist/40">
-        Wall hits dump speed hard · ▲/W throttle · ▼/S brake · ghost stored per
-        layout this session.
+        {hud.awaitingEnter
+          ? "Screen dims · Press Enter for the five-light start (timer begins on lights out)."
+          : `5 laps · gentler throttle · wall hits dump speed · ▲/W gas · ▼/S brake.`}
       </p>
     </div>
   );
