@@ -7,6 +7,7 @@ import type { MouseEvent } from "react";
 
 const links = [
   { href: "/starkizard", label: "Hangar" },
+  { href: "/starkizard#interests", label: "Play" },
   { href: "/starkizard/casino", label: "Casino" },
 ] as const;
 

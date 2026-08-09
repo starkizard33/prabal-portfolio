@@ -15,21 +15,22 @@ type Sprite = {
 
 const sprites: Sprite[] = [
   {
-    id: "charizard",
-    name: "Charizard",
-    localSrc: "/sprites/charizard.gif",
-    cdnSrc: `${SHOWDOWN_CDN}/charizard.gif`,
+    id: "mega-charizard-y",
+    name: "Mega Charizard Y",
+    localSrc: "/sprites/mega-charizard-y.gif",
+    cdnSrc: `${SHOWDOWN_CDN}/charizard-megay.gif`,
     fallbackSrc: "/sprites/charizard-fallback.svg",
-    className: "sprite-float h-[min(42vw,220px)] w-auto drop-shadow-[0_0_28px_rgba(255,107,44,0.55)]",
+    className:
+      "sprite-float h-[min(46vw,240px)] w-auto drop-shadow-[0_0_32px_rgba(255,107,44,0.6)]",
   },
   {
-    id: "rayquaza",
-    name: "Rayquaza",
-    localSrc: "/sprites/rayquaza.gif",
-    cdnSrc: `${SHOWDOWN_CDN}/rayquaza.gif`,
+    id: "mega-rayquaza",
+    name: "Mega Rayquaza",
+    localSrc: "/sprites/mega-rayquaza.gif",
+    cdnSrc: `${SHOWDOWN_CDN}/rayquaza-mega.gif`,
     fallbackSrc: "/sprites/rayquaza-fallback.svg",
     className:
-      "sprite-float-delay h-[min(48vw,260px)] w-auto drop-shadow-[0_0_36px_rgba(61,255,154,0.6)]",
+      "sprite-float-delay h-[min(52vw,280px)] w-auto drop-shadow-[0_0_40px_rgba(61,255,154,0.65)]",
   },
 ];
 
@@ -48,8 +49,8 @@ function SpriteFigure({ sprite }: { sprite: Sprite }) {
       <img
         src={src}
         alt={sprite.name}
-        width={sprite.id === "rayquaza" ? 192 : 160}
-        height={sprite.id === "rayquaza" ? 192 : 160}
+        width={sprite.id === "mega-rayquaza" ? 220 : 190}
+        height={sprite.id === "mega-rayquaza" ? 220 : 190}
         className={`relative image-pixelated ${sprite.className}`}
         onError={() =>
           setSourceIndex((current) =>
@@ -68,7 +69,8 @@ export function SpriteStage() {
   return (
     <section
       className="sprite-stage relative mx-auto w-full max-w-5xl overflow-hidden rounded-[2rem] border border-sz-jade/25 px-4 py-12 md:px-10 md:py-16"
-      aria-label="Hangar sprites"
+      aria-label="Hangar mega sprites"
+      data-animate="fade-up"
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,rgba(61,255,154,0.16),transparent_58%),radial-gradient(ellipse_at_20%_30%,rgba(255,107,44,0.12),transparent_45%)]"
