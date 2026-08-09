@@ -4,13 +4,15 @@ export function Education() {
   return (
     <section id="education" className="section-pad scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
-          Education
-        </p>
-        <h2 className="display mt-3 text-4xl font-bold tracking-tight text-ink md:text-5xl">
-          Foundations.
-        </h2>
-        <ul className="mt-12 space-y-6">
+        <div data-animate="fade-up">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
+            Education
+          </p>
+          <h2 className="display mt-3 text-4xl font-bold tracking-tight text-ink md:text-5xl">
+            Foundations.
+          </h2>
+        </div>
+        <ul data-animate-stagger className="mt-12 space-y-6">
           {profile.education.map((item) => (
             <li
               key={`${item.school}-${item.degree}`}

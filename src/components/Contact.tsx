@@ -3,7 +3,10 @@ import { profile } from "@/data/profile";
 export function Contact() {
   return (
     <section id="contact" className="section-pad scroll-mt-24 py-20 md:py-28">
-      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-ink/10 bg-ink text-mist">
+      <div
+        data-animate="fade-up"
+        className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-ink/10 bg-ink text-mist"
+      >
         <div className="relative px-8 py-14 md:px-14 md:py-16">
           <div
             aria-hidden

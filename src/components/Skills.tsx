@@ -11,13 +11,18 @@ export function Skills() {
   return (
     <section id="skills" className="section-pad scroll-mt-24 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
-          Skills
-        </p>
-        <h2 className="display mt-3 text-4xl font-bold tracking-tight text-ink md:text-5xl">
-          Stack I reach for.
-        </h2>
-        <div className="mt-10 grid gap-0 border-t-2 border-ink/15 md:grid-cols-2">
+        <div data-animate="fade-up">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
+            Skills
+          </p>
+          <h2 className="display mt-3 text-4xl font-bold tracking-tight text-ink md:text-5xl">
+            Stack I reach for.
+          </h2>
+        </div>
+        <div
+          data-animate-stagger
+          className="mt-10 grid gap-0 border-t-2 border-ink/15 md:grid-cols-2"
+        >
           {groups.map((group) => (
             <div
               key={group.label}

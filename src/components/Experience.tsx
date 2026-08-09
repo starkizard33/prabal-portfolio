@@ -4,13 +4,15 @@ export function Experience() {
   return (
     <section id="experience" className="section-pad scroll-mt-24 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
-          Experience
-        </p>
-        <h2 className="display mt-3 max-w-2xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
-          Work that has to be right at scale.
-        </h2>
-        <ol className="mt-10 border-l-2 border-ink/20">
+        <div data-animate="fade-up">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
+            Experience
+          </p>
+          <h2 className="display mt-3 max-w-2xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
+            Work that has to be right at scale.
+          </h2>
+        </div>
+        <ol data-animate-stagger className="mt-10 border-l-2 border-ink/20">
           {profile.experience.map((job, index) => (
             <li
               key={`${job.company}-${job.role}-${job.period}`}

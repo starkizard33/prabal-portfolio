@@ -42,45 +42,57 @@ export default function StarkizardPage() {
           </div>
         </section>
 
-        <section className="mx-auto mt-14 max-w-6xl">
+        <section className="mx-auto mt-14 max-w-6xl" data-animate="fade-up">
           <SpriteStage />
         </section>
 
-        <section className="mx-auto mt-16 max-w-6xl">
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-sz-mist/45">
-            Interests
-          </p>
-          <h2 className="display mt-3 text-3xl font-bold md:text-4xl">
-            What fuels the hangar
-          </h2>
-          <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {profile.interests.map((interest, index) => (
-              <li
-                key={interest.id}
-                className="border border-white/10 bg-sz-panel/40 p-5 transition hover:border-sz-jade/40 hover:shadow-[0_0_28px_rgba(61,255,154,0.08)]"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <h3 className="display text-xl font-bold text-sz-gold">
-                  {interest.name}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-sz-mist/70">
-                  {interest.blurb}
-                </p>
-                {interest.id === "casino" ? (
+        <section id="interests" className="mx-auto mt-16 max-w-6xl">
+          <div data-animate="fade-up">
+            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-sz-mist/45">
+              Interests
+            </p>
+            <h2 className="display mt-3 text-3xl font-bold md:text-4xl">
+              What fuels the hangar
+            </h2>
+          </div>
+          <ul
+            data-animate-stagger
+            className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {profile.interests.map((interest) => {
+              const isWip = "wip" in interest && interest.wip === true;
+              return (
+                <li
+                  key={interest.id}
+                  className="relative border border-white/10 bg-sz-panel/40 p-5 transition hover:border-sz-jade/40 hover:shadow-[0_0_28px_rgba(61,255,154,0.08)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="display text-xl font-bold text-sz-gold">
+                      {interest.name}
+                    </h3>
+                    {isWip ? (
+                      <span className="shrink-0 rounded-full border border-sz-ember/50 bg-sz-ember/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-sz-ember">
+                        WIP
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-sz-mist/70">
+                    {interest.blurb}
+                  </p>
                   <Link
-                    href="/starkizard/casino"
+                    href={interest.href}
                     className="mt-4 inline-block text-sm font-medium text-sz-jade hover:text-sz-gold"
                   >
-                    Enter Casino →
+                    {interest.cta}
                   </Link>
-                ) : null}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </section>
       </main>
 
-      <footer className="section-pad border-t border-white/8 py-6">
+      <footer className="section-pad border-t border-white/8 py-6" data-animate="fade-up">
         <p className="mx-auto max-w-6xl text-center text-xs text-sz-mist/40">
           Animated sprites from{" "}
           <a

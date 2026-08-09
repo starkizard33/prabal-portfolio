@@ -7,13 +7,18 @@ export function Achievements() {
       className="section-pad scroll-mt-24 py-16 md:py-24"
     >
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
-          Achievements
-        </p>
-        <h2 className="display mt-3 max-w-2xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
-          Leaderboards, records, and one Outstanding year.
-        </h2>
-        <ul className="mt-10 grid gap-px border border-ink/15 bg-ink/15 sm:grid-cols-2">
+        <div data-animate="fade-up">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
+            Achievements
+          </p>
+          <h2 className="display mt-3 max-w-2xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
+            Leaderboards, records, and one Outstanding year.
+          </h2>
+        </div>
+        <ul
+          data-animate-stagger
+          className="mt-10 grid gap-px border border-ink/15 bg-ink/15 sm:grid-cols-2"
+        >
           {profile.achievements.map((item) => (
             <li
               key={`${item.title}-${item.detail}`}

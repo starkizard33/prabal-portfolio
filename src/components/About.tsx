@@ -4,7 +4,7 @@ export function About() {
   return (
     <section id="about" className="section-pad scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.85fr_1.15fr]">
-        <div>
+        <div data-animate="fade-up">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
             About
           </p>
@@ -14,7 +14,10 @@ export function About() {
             Builder always.
           </h2>
         </div>
-        <div className="space-y-5 text-base leading-relaxed text-ink-soft md:text-lg">
+        <div
+          data-animate-stagger
+          className="space-y-5 text-base leading-relaxed text-ink-soft md:text-lg"
+        >
           {profile.about.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}

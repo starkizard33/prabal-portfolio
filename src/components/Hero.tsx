@@ -4,9 +4,14 @@ import { profile } from "@/data/profile";
 export function Hero() {
   return (
     <section className="section-pad relative min-h-[100svh] overflow-hidden">
-      <div aria-hidden className="blueprint-grid pointer-events-none absolute inset-0" />
       <div
         aria-hidden
+        data-parallax="0.08"
+        className="blueprint-grid pointer-events-none absolute inset-0"
+      />
+      <div
+        aria-hidden
+        data-parallax="0.14"
         className="blueprint-grid-drift pointer-events-none absolute -inset-[8%] opacity-40"
       />
       <div

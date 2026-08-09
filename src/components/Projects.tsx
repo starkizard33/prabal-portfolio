@@ -4,13 +4,15 @@ export function Projects() {
   return (
     <section id="projects" className="section-pad scroll-mt-24 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
-          Projects
-        </p>
-        <h2 className="display mt-3 max-w-xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
-          Things I&apos;ve built and broken in.
-        </h2>
-        <div className="mt-10 border-y-2 border-ink/15">
+        <div data-animate="fade-up">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-steel">
+            Projects
+          </p>
+          <h2 className="display mt-3 max-w-xl text-4xl font-bold tracking-tight text-ink md:text-5xl">
+            Things I&apos;ve built and broken in.
+          </h2>
+        </div>
+        <div data-animate-stagger className="mt-10 border-y-2 border-ink/15">
           {profile.projects.map((project) => (
             <a
               key={project.name}
