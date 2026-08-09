@@ -232,12 +232,12 @@ export function GuessLinkinParkAudio() {
           shuffled deck, no daily limit.
         </p>
 
-        <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
           <button
             type="button"
             onClick={playClip}
             disabled={loadingPreview || !!loadError || done || !preview}
-            className="rounded-full bg-sz-jade px-6 py-3 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40"
+            className="w-full rounded-full bg-sz-jade px-6 py-3 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40 sm:w-auto"
           >
             {playing ? `Playing ${clipSeconds}s…` : `Play ${clipSeconds}s clip`}
           </button>
@@ -245,7 +245,7 @@ export function GuessLinkinParkAudio() {
             <button
               type="button"
               onClick={stopClip}
-              className="rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80"
+              className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 sm:w-auto"
             >
               Stop
             </button>
@@ -265,7 +265,7 @@ export function GuessLinkinParkAudio() {
             <button
               type="button"
               onClick={handleNext}
-              className="rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade"
+              className="w-full rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade sm:w-auto"
             >
               Skip this track →
             </button>
@@ -278,20 +278,20 @@ export function GuessLinkinParkAudio() {
             onChange={(e) => setGuess(e.target.value)}
             disabled={done || !!loadError}
             placeholder="Song title…"
-            className="min-w-0 flex-1 rounded-full border border-white/15 bg-sz-void px-4 py-2.5 text-sz-mist outline-none focus:border-sz-jade/60 disabled:opacity-50"
+            className="min-w-0 flex-1 rounded-full border border-white/15 bg-sz-void px-4 py-2.5 text-base text-sz-mist outline-none focus:border-sz-jade/60 disabled:opacity-50"
             autoComplete="off"
             spellCheck={false}
           />
           <button
             type="submit"
             disabled={done || !guess.trim() || !!loadError}
-            className="rounded-full bg-sz-jade px-5 py-2.5 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40"
+            className="w-full rounded-full bg-sz-jade px-5 py-2.5 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40 sm:w-auto"
           >
             Guess
           </button>
         </form>
 
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             onClick={handleSkipClip}
@@ -300,7 +300,7 @@ export function GuessLinkinParkAudio() {
               !!loadError ||
               round.attempt >= CLIP_SECONDS.length - 1
             }
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-jade/50 disabled:opacity-40"
+            className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-jade/50 disabled:opacity-40 sm:w-auto"
           >
             Skip to longer clip
           </button>
@@ -308,7 +308,7 @@ export function GuessLinkinParkAudio() {
             type="button"
             onClick={handleReveal}
             disabled={done || !!loadError}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-ember/50 disabled:opacity-40"
+            className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-ember/50 disabled:opacity-40 sm:w-auto"
           >
             Reveal
           </button>
@@ -316,7 +316,7 @@ export function GuessLinkinParkAudio() {
             <button
               type="button"
               onClick={handleNext}
-              className="rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade transition hover:bg-sz-jade/10"
+              className="w-full rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade transition hover:bg-sz-jade/10 sm:w-auto"
             >
               Next track →
             </button>

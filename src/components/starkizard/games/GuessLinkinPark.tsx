@@ -162,25 +162,25 @@ export function GuessLinkinPark() {
             onChange={(e) => setGuess(e.target.value)}
             disabled={revealed}
             placeholder="Song title…"
-            className="min-w-0 flex-1 rounded-full border border-white/15 bg-sz-void px-4 py-2.5 text-sz-mist outline-none focus:border-sz-jade/60 disabled:opacity-50"
+            className="min-w-0 flex-1 rounded-full border border-white/15 bg-sz-void px-4 py-2.5 text-base text-sz-mist outline-none focus:border-sz-jade/60 disabled:opacity-50"
             autoComplete="off"
             spellCheck={false}
           />
           <button
             type="submit"
             disabled={revealed || !guess.trim()}
-            className="rounded-full bg-sz-jade px-5 py-2.5 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40"
+            className="w-full rounded-full bg-sz-jade px-5 py-2.5 text-sm font-semibold text-sz-void transition hover:bg-sz-gold disabled:opacity-40 sm:w-auto"
           >
             Guess
           </button>
         </form>
 
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             onClick={handleSkip}
             disabled={revealed}
-            className="rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-ember/50 disabled:opacity-40"
+            className="w-full rounded-full border border-white/15 px-4 py-2 text-sm text-sz-mist/80 transition hover:border-sz-ember/50 disabled:opacity-40 sm:w-auto"
           >
             Reveal
           </button>
@@ -188,7 +188,7 @@ export function GuessLinkinPark() {
             <button
               type="button"
               onClick={handleNext}
-              className="rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade transition hover:bg-sz-jade/10"
+              className="w-full rounded-full border border-sz-jade/40 px-4 py-2 text-sm text-sz-jade transition hover:bg-sz-jade/10 sm:w-auto"
             >
               Next snippet →
             </button>
