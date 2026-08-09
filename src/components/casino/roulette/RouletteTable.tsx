@@ -176,8 +176,8 @@ export function RouletteTable() {
       <div className="grid gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:items-start">
         <Wheel spinning={spinning} rotationDeg={rotation} lastResult={lastResult} />
 
-        <div className="space-y-4">
-          <div className="overflow-x-auto rounded-sm border border-sz-jade/20 bg-sz-panel/40 p-3 shadow-[0_0_40px_rgba(61,255,154,0.06)]">
+        <div className="min-w-0 space-y-4">
+          <div className="min-w-0 overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] rounded-sm border border-sz-jade/20 bg-sz-panel/40 p-3 shadow-[0_0_40px_rgba(61,255,154,0.06)]">
             <div className="inline-grid min-w-[520px] grid-cols-[2.5rem_repeat(12,minmax(2.4rem,1fr))_2.75rem] gap-0.5">
               <button
                 type="button"

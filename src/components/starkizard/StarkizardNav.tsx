@@ -45,7 +45,7 @@ export function StarkizardNav() {
 
   return (
     <header className="section-pad sticky top-0 z-40 border-b border-white/8 bg-sz-void/80 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 py-3">
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
         <Link
           href="/starkizard"
           data-egg="brand"
@@ -55,7 +55,7 @@ export function StarkizardNav() {
         >
           STARKIZARD
         </Link>
-        <ul className="flex items-center gap-4 text-sm text-sz-mist/70 md:gap-6">
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-sz-mist/70 sm:gap-x-5">
           {links.map((link) => (
             <li key={link.href}>
               <Link
