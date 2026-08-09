@@ -3,17 +3,17 @@ import { PlayShell } from "@/components/starkizard/games/PlayShell";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Red Bull Ring · Starkizard",
+  title: "Circuit Race · Starkizard",
   description:
-    "Fan recreation of the Red Bull Ring layout — time trial with ghost.",
+    "Pick a layout or draw your own — time trial with ghost on a Neon Void circuit.",
 };
 
 export default function RacePlayPage() {
   return (
     <PlayShell
       eyebrow="Neon Void · Play"
-      title="Red Bull Ring"
-      blurb="Unofficial fan layout (S/F south, T3 NE hairpin, real corner names). WASD or arrows — chase your ghost."
+      title="Circuit Race"
+      blurb="Choose a preset (Red Bull Ring, figure-eight, hairpins, speed bowl) or draw your own centerline. Wide track, hard wall slowdown, ghost laps — WASD or arrows."
     >
       <CircuitRace />
     </PlayShell>
