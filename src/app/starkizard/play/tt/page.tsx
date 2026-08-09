@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Table Tennis · Starkizard",
-  description: "2D table tennis vs bot — Neon Void hangar mini-game.",
+  description: "2D table tennis with topspin, backspin, and sidespin vs bot.",
 };
 
 export default function TableTennisPlayPage() {
@@ -12,7 +12,7 @@ export default function TableTennisPlayPage() {
     <PlayShell
       eyebrow="Neon Void · Play"
       title="Table Tennis"
-      blurb="You vs the hangar bot. First to 11. Mouse, touch, or keyboard."
+      blurb="First to 11. Hold Q topspin, E backspin, A/D sidespin on contact — ball curves."
     >
       <TableTennis />
     </PlayShell>

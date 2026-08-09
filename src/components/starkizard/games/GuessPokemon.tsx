@@ -168,21 +168,41 @@ export function GuessPokemon() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="border border-sz-jade/20 bg-sz-panel/50 p-6 shadow-[0_0_40px_rgba(61,255,154,0.06)]">
-        <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-white/8 bg-sz-void/60 py-8">
+        <div
+          className={`relative flex min-h-[300px] flex-col items-center justify-center overflow-hidden rounded-2xl border py-10 transition duration-500 ${
+            showSprite
+              ? "border-sz-jade/30 bg-sz-void/70"
+              : "border-[#c9d4e3]/80 bg-[radial-gradient(circle_at_50%_45%,#ffffff_0%,#e8eef6_55%,#d5deea_100%)]"
+          }`}
+        >
+          {!showSprite ? (
+            <div
+              className="pointer-events-none absolute inset-0 opacity-40"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 50% 52%, transparent 28%, rgba(18,21,28,0.06) 70%)",
+              }}
+              aria-hidden
+            />
+          ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={current.sprite}
             alt={showSprite ? current.name : "Mystery Pokémon silhouette"}
-            width={200}
-            height={200}
-            className={`image-pixelated h-[min(46vw,200px)] w-auto transition duration-500 ${
+            width={220}
+            height={220}
+            className={`image-pixelated relative h-[min(48vw,220px)] w-auto transition duration-500 ${
               showSprite
                 ? "drop-shadow-[0_0_28px_rgba(61,255,154,0.45)]"
-                : "brightness-0 contrast-200"
+                : "brightness-0 contrast-[1.15] drop-shadow-[0_10px_18px_rgba(18,21,28,0.35)]"
             }`}
             draggable={false}
           />
-          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.28em] text-sz-mist/40">
+          <p
+            className={`relative mt-5 font-mono text-[10px] uppercase tracking-[0.28em] ${
+              showSprite ? "text-sz-mist/40" : "text-[#2a3140]/55"
+            }`}
+          >
             {showSprite ? current.name : "Who's that Pokémon?"}
           </p>
         </div>
@@ -250,8 +270,8 @@ export function GuessPokemon() {
           </div>
         </dl>
         <p className="mt-6 text-xs leading-relaxed text-sz-mist/40">
-          Silhouette until you nail it (or bail). Fan sprites via Showdown ·
-          Pokémon © Nintendo / Creatures / GAME FREAK.
+          Silhouette on a light board until you nail it. Fan sprites via Showdown
+          · Pokémon © Nintendo / Creatures / GAME FREAK.
         </p>
       </aside>
     </div>

@@ -2,25 +2,51 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const W = 800;
-const H = 520;
+const W = 860;
+const H = 560;
 const LAPS = 2;
+const TRACK_HALF = 22;
 
-/** Stylized Spielberg-inspired loop (not a licensed map). */
+/**
+ * Red Bull Ring (Spielberg) — fan recreation from published layout proportions.
+ * Clockwise, S/F along the south, T3 hairpin at the north-east high point.
+ * Not licensed; geometry approximated for a personal game.
+ */
 const PATH: { x: number; y: number; label?: string }[] = [
-  { x: 120, y: 400 },
-  { x: 200, y: 430, label: "T1" },
-  { x: 340, y: 400 },
-  { x: 480, y: 360, label: "Remus" },
-  { x: 620, y: 300 },
-  { x: 700, y: 220, label: "Schlossgold" },
-  { x: 680, y: 140 },
-  { x: 560, y: 100, label: "Rauch" },
-  { x: 400, y: 120 },
-  { x: 260, y: 160, label: "Würth" },
-  { x: 160, y: 220 },
-  { x: 100, y: 300, label: "Rindt" },
-  { x: 120, y: 400 },
+  // Start/finish → run to T1 (east along south)
+  { x: 200, y: 468 },
+  { x: 310, y: 470 },
+  { x: 430, y: 468 },
+  { x: 540, y: 458 },
+  { x: 620, y: 440, label: "T1 · Lauda" },
+  // T1 right → north, T2 left kink
+  { x: 655, y: 400 },
+  { x: 665, y: 350 },
+  { x: 655, y: 300, label: "T2 · Münzer" },
+  // Long steep climb to T3
+  { x: 670, y: 240 },
+  { x: 700, y: 175 },
+  { x: 730, y: 125 },
+  { x: 745, y: 88, label: "T3" },
+  // Hairpin right → short to T4 Rauch
+  { x: 700, y: 68 },
+  { x: 640, y: 72 },
+  { x: 585, y: 95, label: "T4 · Rauch" },
+  // Mid-sector downhill complex T5–T8
+  { x: 530, y: 130 },
+  { x: 490, y: 165, label: "T5" },
+  { x: 445, y: 195 },
+  { x: 390, y: 210, label: "T6" },
+  { x: 330, y: 200 },
+  { x: 280, y: 175, label: "T7 · Graz" },
+  { x: 235, y: 175 },
+  { x: 195, y: 205, label: "T8" },
+  // T9 Rindt → T10 → S/F
+  { x: 160, y: 255 },
+  { x: 140, y: 320, label: "T9 · Rindt" },
+  { x: 145, y: 380 },
+  { x: 165, y: 430, label: "T10" },
+  { x: 200, y: 468 },
 ];
 
 function polylineLength(pts: { x: number; y: number }[]) {
@@ -55,7 +81,7 @@ function samplePath(t: number) {
 function closestProgress(px: number, py: number) {
   let best = 0;
   let bestDist = Infinity;
-  const steps = 240;
+  const steps = 320;
   for (let i = 0; i < steps; i += 1) {
     const t = i / steps;
     const p = samplePath(t);
@@ -66,6 +92,30 @@ function closestProgress(px: number, py: number) {
     }
   }
   return { t: best, dist: bestDist };
+}
+
+function drawSmoothTrack(
+  draw: CanvasRenderingContext2D,
+  width: number,
+  color: string,
+  dash?: number[],
+) {
+  draw.strokeStyle = color;
+  draw.lineWidth = width;
+  draw.lineJoin = "round";
+  draw.lineCap = "round";
+  if (dash) draw.setLineDash(dash);
+  draw.beginPath();
+  draw.moveTo(PATH[0].x, PATH[0].y);
+  for (let i = 1; i < PATH.length - 1; i += 1) {
+    const midX = (PATH[i].x + PATH[i + 1].x) / 2;
+    const midY = (PATH[i].y + PATH[i + 1].y) / 2;
+    draw.quadraticCurveTo(PATH[i].x, PATH[i].y, midX, midY);
+  }
+  const last = PATH[PATH.length - 1];
+  draw.lineTo(last.x, last.y);
+  draw.stroke();
+  draw.setLineDash([]);
 }
 
 export function CircuitRace() {
@@ -91,13 +141,13 @@ export function CircuitRace() {
     const canvas: HTMLCanvasElement = canvasEl;
     const draw: CanvasRenderingContext2D = maybeCtx;
 
-    const startPose = samplePath(0.02);
+    const startPose = samplePath(0.01);
     const car = {
       x: startPose.x,
       y: startPose.y,
       angle: startPose.angle,
       speed: 0,
-      lastProgress: 0.02,
+      lastProgress: 0.01,
       lap: 1,
       start: performance.now(),
     };
@@ -109,7 +159,7 @@ export function CircuitRace() {
       lap: 1,
       time: 0,
       finished: false,
-      status: "Ready — WASD / arrows",
+      status: "Red Bull Ring fan layout — WASD / arrows",
       best: bestRef.current,
     }));
 
@@ -143,39 +193,48 @@ export function CircuitRace() {
     let last = performance.now();
     let hudTick = 0;
 
-    function drawTrack() {
-      draw.strokeStyle = "rgba(255,107,44,0.55)";
-      draw.lineWidth = 46;
-      draw.lineJoin = "round";
-      draw.lineCap = "round";
-      draw.shadowColor = "rgba(255,107,44,0.25)";
-      draw.shadowBlur = 18;
+    function drawScene() {
+      // Styrian hills backdrop
+      draw.fillStyle = "#0a1210";
+      draw.fillRect(0, 0, W, H);
+      const sky = draw.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, "#152018");
+      sky.addColorStop(0.45, "#0c1412");
+      sky.addColorStop(1, "#070b10");
+      draw.fillStyle = sky;
+      draw.fillRect(0, 0, W, H);
+
+      draw.fillStyle = "rgba(40, 70, 48, 0.35)";
       draw.beginPath();
-      draw.moveTo(PATH[0].x, PATH[0].y);
-      for (let i = 1; i < PATH.length; i += 1) draw.lineTo(PATH[i].x, PATH[i].y);
-      draw.stroke();
+      draw.moveTo(0, 220);
+      draw.quadraticCurveTo(200, 120, 420, 160);
+      draw.quadraticCurveTo(640, 90, W, 140);
+      draw.lineTo(W, H);
+      draw.lineTo(0, H);
+      draw.fill();
+
+      draw.shadowColor = "rgba(255,107,44,0.2)";
+      draw.shadowBlur = 16;
+      drawSmoothTrack(draw, TRACK_HALF * 2 + 10, "rgba(255,107,44,0.55)");
       draw.shadowBlur = 0;
+      drawSmoothTrack(draw, TRACK_HALF * 2, "rgba(28, 32, 36, 0.98)");
+      drawSmoothTrack(draw, 1.5, "rgba(240,196,92,0.4)", [7, 9]);
 
-      draw.strokeStyle = "rgba(15,22,32,0.95)";
-      draw.lineWidth = 34;
-      draw.beginPath();
-      draw.moveTo(PATH[0].x, PATH[0].y);
-      for (let i = 1; i < PATH.length; i += 1) draw.lineTo(PATH[i].x, PATH[i].y);
-      draw.stroke();
+      // S/F stripe
+      const sf = samplePath(0.01);
+      draw.save();
+      draw.translate(sf.x, sf.y);
+      draw.rotate(sf.angle);
+      for (let i = -4; i < 5; i += 1) {
+        draw.fillStyle = i % 2 === 0 ? "#f3f5f8" : "#12151c";
+        draw.fillRect(-6, i * 4 - 2, 12, 4);
+      }
+      draw.restore();
 
-      draw.strokeStyle = "rgba(240,196,92,0.35)";
-      draw.lineWidth = 1.5;
-      draw.setLineDash([6, 8]);
-      draw.beginPath();
-      draw.moveTo(PATH[0].x, PATH[0].y);
-      for (let i = 1; i < PATH.length; i += 1) draw.lineTo(PATH[i].x, PATH[i].y);
-      draw.stroke();
-      draw.setLineDash([]);
-
-      draw.fillStyle = "rgba(215,231,223,0.45)";
+      draw.fillStyle = "rgba(215,231,223,0.55)";
       draw.font = "10px ui-monospace, monospace";
       for (const p of PATH) {
-        if (p.label) draw.fillText(p.label, p.x + 8, p.y - 10);
+        if (p.label) draw.fillText(p.label, p.x + 8, p.y - 8);
       }
     }
 
@@ -184,25 +243,25 @@ export function CircuitRace() {
       last = now;
 
       if (!done) {
-        if (keys.current.up) car.speed += 0.14 * dt;
-        if (keys.current.down) car.speed -= 0.18 * dt;
+        if (keys.current.up) car.speed += 0.15 * dt;
+        if (keys.current.down) car.speed -= 0.2 * dt;
         if (keys.current.left) {
-          car.angle -= 0.045 * dt * (0.6 + Math.abs(car.speed) * 0.12);
+          car.angle -= 0.048 * dt * (0.55 + Math.abs(car.speed) * 0.13);
         }
         if (keys.current.right) {
-          car.angle += 0.045 * dt * (0.6 + Math.abs(car.speed) * 0.12);
+          car.angle += 0.048 * dt * (0.55 + Math.abs(car.speed) * 0.13);
         }
-        car.speed *= 0.985;
-        car.speed = Math.max(-2.2, Math.min(5.4, car.speed));
+        car.speed *= 0.986;
+        car.speed = Math.max(-2.4, Math.min(5.8, car.speed));
         car.x += Math.cos(car.angle) * car.speed * dt;
         car.y += Math.sin(car.angle) * car.speed * dt;
 
         const near = closestProgress(car.x, car.y);
-        if (near.dist > 28) {
+        if (near.dist > TRACK_HALF + 6) {
           const snap = samplePath(near.t);
-          car.x += (snap.x - car.x) * 0.12;
-          car.y += (snap.y - car.y) * 0.12;
-          car.speed *= 0.92;
+          car.x += (snap.x - car.x) * 0.16;
+          car.y += (snap.y - car.y) * 0.16;
+          car.speed *= 0.88;
         }
 
         const delta = near.t - car.lastProgress;
@@ -246,21 +305,7 @@ export function CircuitRace() {
         }
       }
 
-      draw.fillStyle = "#070b10";
-      draw.fillRect(0, 0, W, H);
-      const g = draw.createRadialGradient(
-        W * 0.55,
-        H * 0.4,
-        40,
-        W * 0.5,
-        H * 0.5,
-        420,
-      );
-      g.addColorStop(0, "rgba(255,107,44,0.12)");
-      g.addColorStop(1, "transparent");
-      draw.fillStyle = g;
-      draw.fillRect(0, 0, W, H);
-      drawTrack();
+      drawScene();
 
       if (ghost.current.length > 1) {
         const elapsed = now - car.start;
@@ -284,12 +329,12 @@ export function CircuitRace() {
       draw.save();
       draw.translate(car.x, car.y);
       draw.rotate(car.angle);
-      draw.fillStyle = "#ff6b2c";
-      draw.shadowColor = "rgba(255,107,44,0.7)";
+      draw.fillStyle = "#1e41ff";
+      draw.shadowColor = "rgba(30,65,255,0.55)";
       draw.shadowBlur = 12;
-      draw.fillRect(-12, -6, 24, 12);
-      draw.fillStyle = "#f0c45c";
-      draw.fillRect(6, -4, 6, 8);
+      draw.fillRect(-13, -6, 26, 12);
+      draw.fillStyle = "#ff6b2c";
+      draw.fillRect(7, -4, 7, 8);
       draw.restore();
 
       raf = requestAnimationFrame(frame);
@@ -308,7 +353,7 @@ export function CircuitRace() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-sz-ember/80">
-            Spielberg Circuit (fan track)
+            Red Bull Ring · fan recreation
           </p>
           <p className="mt-1 text-sm text-sz-mist/70">{hud.status}</p>
         </div>
@@ -334,7 +379,7 @@ export function CircuitRace() {
         width={W}
         height={H}
         className="w-full rounded-2xl border border-sz-ember/30 bg-sz-void shadow-[0_0_40px_rgba(255,107,44,0.1)]"
-        aria-label="Spielberg Circuit fan track"
+        aria-label="Red Bull Ring fan track"
       />
       {hud.finished ? (
         <button
@@ -346,8 +391,9 @@ export function CircuitRace() {
         </button>
       ) : null}
       <p className="text-xs text-sz-mist/40">
-        Stylized loop with approximate turn names — not an accurate or licensed
-        track map. Orange army vibes only.
+        Layout follows published Red Bull Ring proportions (S/F south, T3 NE
+        hairpin, T1 Lauda → T10). Unofficial fan recreation — not licensed by
+        Red Bull Ring / F1.
       </p>
     </div>
   );
