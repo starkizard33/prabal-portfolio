@@ -12,6 +12,9 @@ export function SiteFooter() {
           <Link href="/starkizard" className="hover:text-signal">
             Starkizard
           </Link>
+          <Link href="/starkizard/casino" className="hover:text-signal">
+            Casino
+          </Link>
           <a href={profile.links.codeforces} target="_blank" rel="noreferrer" className="hover:text-signal">
             Codeforces
           </a>

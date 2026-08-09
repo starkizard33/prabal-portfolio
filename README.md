@@ -1,6 +1,6 @@
 # Prabal Kalia Portfolio
 
-Semi-professional personal site for **Prabal Kalia**, with a **Starkizard** playground for interests, Mega Rayquaza animation, blackjack, and custom board-game concepts.
+Semi-professional personal site for **Prabal Kalia**, with a **Starkizard** Neon Void hangar (sprites + interests) and a session-only **Casino** (blackjack + European roulette).
 
 ## Stack
 
@@ -17,10 +17,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Routes
 
-- `/` — professional portfolio (resume-backed)
-- `/starkizard` — hangar / interests + Rayquaza
-- `/starkizard/blackjack` — playable blackjack
-- `/starkizard/games` — custom board game concepts
+- `/` — professional portfolio (Blueprint Atelier)
+- `/starkizard` — hangar / interests + sprite stage
+- `/starkizard/casino` — buy-in lobby + session HUD
+- `/starkizard/casino/blackjack` — 6-deck S17 blackjack + helpers
+- `/starkizard/casino/roulette` — European roulette
+
+Legacy redirects:
+
+- `/starkizard/blackjack` → `/starkizard/casino/blackjack`
+- `/starkizard/games` → `/starkizard`
 
 ## Content
 

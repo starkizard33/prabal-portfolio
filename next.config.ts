@@ -1,7 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/starkizard/blackjack",
+        destination: "/starkizard/casino/blackjack",
+        permanent: true,
+      },
+      {
+        source: "/starkizard/games",
+        destination: "/starkizard",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
