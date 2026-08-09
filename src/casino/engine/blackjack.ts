@@ -130,29 +130,51 @@ function bothHaveBlackjack(player: Card[], dealer: Card[]): boolean {
   return isBlackjack(player) && isBlackjack(dealer);
 }
 
+function peekForDealerBlackjack(state: BjState): BjState {
+  if (!isBlackjack(state.dealer)) {
+    return {
+      ...state,
+      phase: "player",
+      message:
+        state.insuranceBet > 0 ? "Insurance lost — your play" : "Your play",
+    };
+  }
+
+  const tookInsurance = state.insuranceBet > 0;
+  const playerBj = isBlackjack(state.playerHands[0].cards);
+  return finalizeSettlement({
+    ...state,
+    holeRevealed: true,
+    message: tookInsurance
+      ? "Dealer blackjack — insurance pays 2:1"
+      : playerBj
+        ? "Push — both blackjack"
+        : "Dealer blackjack",
+  });
+}
+
 function resolveDealerPeek(state: BjState): BjState {
   const up = state.dealer[0];
   const hole = state.dealer[1];
   if (!up || !hole) return state;
 
-  const peekEligible = up.rank === "A" || isTenValue(up);
-  if (!peekEligible) return { ...state, phase: "player", message: "Your play" };
-
-  if (isBlackjack(state.dealer)) {
-    const playerBj = isBlackjack(state.playerHands[0].cards);
-    return finalizeSettlement({
-      ...state,
-      holeRevealed: true,
-      message: playerBj ? "Push — both blackjack" : "Dealer blackjack",
-    });
-  }
-
+  // Ace up: offer insurance first; peek only after take/decline.
   if (up.rank === "A") {
     return {
       ...state,
       phase: "insurance",
       message: "Insurance?",
     };
+  }
+
+  // Ten-value: peek immediately (no insurance).
+  if (isTenValue(up) && isBlackjack(state.dealer)) {
+    const playerBj = isBlackjack(state.playerHands[0].cards);
+    return finalizeSettlement({
+      ...state,
+      holeRevealed: true,
+      message: playerBj ? "Push — both blackjack" : "Dealer blackjack",
+    });
   }
 
   return { ...state, phase: "player", message: "Your play" };
@@ -298,34 +320,18 @@ function playDealer(state: BjState): BjState {
 }
 
 function declineInsurance(state: BjState): BjState {
-  return {
+  return peekForDealerBlackjack({
     ...state,
-    phase: "player",
     insuranceBet: 0,
-    message: "Your play",
-  };
+  });
 }
 
 function takeInsurance(state: BjState): BjState {
   const amount = Math.floor(state.baseBet / 2);
-  let next: BjState = {
+  return peekForDealerBlackjack({
     ...cloneState(state),
     insuranceBet: amount,
-  };
-
-  if (isBlackjack(next.dealer)) {
-    return finalizeSettlement({
-      ...next,
-      holeRevealed: true,
-      message: "Dealer blackjack — insurance pays 2:1",
-    });
-  }
-
-  return {
-    ...next,
-    phase: "player",
-    message: "Insurance lost — your play",
-  };
+  });
 }
 
 export function applyAction(
@@ -438,21 +444,23 @@ export function applyAction(
       fromSplitAces: splittingAces,
     };
 
-    if (splittingAces) {
-      return advanceAfterPlayerAction(next);
-    }
-
-    return { ...next, phase: "player", message: "Your play" };
+    // Always advance: natural 21 on a split hand must skip finished hands.
+    return advanceAfterPlayerAction(next);
   }
 
   return state;
 }
 
 /**
- * Net chip delta for the round (positive = player wins).
- * Assumes bets were removed from bankroll when placed; returns profit/loss only.
- * Convention: +bet on win, +1.5*bet on BJ, 0 on push, -bet on loss,
- * -bet/2 on surrender; insurance +2× insuranceBet if dealer BJ else -insuranceBet.
+ * Pure player profit/loss for a settled round (positive = player wins).
+ *
+ * Convention: bets remain on the table — the engine never deducts stakes from
+ * bankroll. Session code should apply this delta after deducting/restoring
+ * stakes consistently with that model (or treat bankroll as including table
+ * stakes and add this delta directly).
+ *
+ * Payouts: +bet win, +1.5×bet natural BJ, 0 push, −bet loss, −bet/2 surrender;
+ * insurance +2×insuranceBet if dealer BJ else −insuranceBet.
  */
 export function settlePayouts(state: BjState): number {
   if (state.phase !== "settled") return 0;

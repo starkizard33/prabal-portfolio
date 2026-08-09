@@ -87,4 +87,37 @@ describe("blackjack", () => {
     expect(handTotal(s.dealer)).toEqual({ total: 17, soft: true });
     expect(settlePayouts(s)).toBe(20);
   });
+
+  test("insurance taken + dealer BJ pays 2:1", () => {
+    // P 9+7 vs D A+K (BJ); offer insurance before peek
+    const shoe = shoeWith(c("9"), c("A"), c("7"), c("K"));
+    let s = createBjRound(shoe, 100);
+    expect(s.phase).toBe("insurance");
+    s = applyAction(s, "insurance");
+    expect(s.phase).toBe("settled");
+    expect(s.insuranceBet).toBe(50);
+    // Main −100 + insurance +100 (2:1 on 50)
+    expect(settlePayouts(s)).toBe(0);
+  });
+
+  test("decline insurance + dealer BJ loses main bet", () => {
+    const shoe = shoeWith(c("9"), c("A"), c("7"), c("K"));
+    let s = createBjRound(shoe, 100);
+    expect(s.phase).toBe("insurance");
+    s = applyAction(s, "stand"); // declines insurance, then peek settles
+    expect(s.phase).toBe("settled");
+    expect(s.insuranceBet).toBe(0);
+    expect(settlePayouts(s)).toBe(-100);
+  });
+
+  test("split then 21 auto-advances", () => {
+    // P 10+10 vs D 6+9; split draws A (21) then 5
+    const shoe = shoeWith(c("10"), c("6"), c("10"), c("9"), c("A"), c("5"));
+    let s = createBjRound(shoe, 40);
+    s = applyAction(s, "split");
+    expect(s.playerHands).toHaveLength(2);
+    expect(handTotal(s.playerHands[0].cards).total).toBe(21);
+    expect(s.activeHand).toBe(1);
+    expect(s.phase).toBe("player");
+  });
 });
