@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Starkizard",
   description:
-    "The hangar — Neon Void home for Pokémon sprites, Linkin Park, table tennis, Max Verstappen, and the casino.",
+    "The hangar — Neon Void home for Pokémon sprites, Linkin Park, Max Verstappen, and the casino.",
 };
 
 export default function StarkizardPage() {
@@ -24,7 +24,7 @@ export default function StarkizardPage() {
           </h1>
           <p className="animate-rise-delay-2 mt-5 max-w-2xl text-lg text-sz-mist/75">
             Tony Stark energy × Charizard fire. Offline hangar for music,
-            motorsport, rackets, dragons — and a session casino downstairs.
+            motorsport, dragons — and a session casino downstairs.
           </p>
           <div className="animate-rise-delay-3 mt-8 flex flex-wrap gap-3">
             <Link

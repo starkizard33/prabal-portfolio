@@ -204,13 +204,6 @@ export const profile = {
       cta: "Guess the song →",
     },
     {
-      id: "tt",
-      name: "Table Tennis",
-      blurb: "Spin, timing, and the satisfactions of a clean counter-hit.",
-      href: "/starkizard/play/tt",
-      cta: "Play vs bot →",
-    },
-    {
       id: "f1",
       name: "Max Verstappen",
       blurb: "Orange Army. Telemetry, late braking, and race craft.",

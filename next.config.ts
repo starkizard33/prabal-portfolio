@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/starkizard",
         permanent: true,
       },
+      {
+        source: "/starkizard/play/tt",
+        destination: "/starkizard",
+        permanent: true,
+      },
     ];
   },
 };
