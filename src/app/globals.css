@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #12151c;
+  --ink-soft: #2a3140;
+  --mist: #e8ecf2;
+  --paper: #f3f5f8;
+  --fog: #c5cedd;
+  --signal: #c23b22;
+  --signal-deep: #8f2a18;
+  --steel: #5b6b82;
+  --glow: rgba(194, 59, 34, 0.18);
+
+  --sz-void: #070b10;
+  --sz-panel: #0f1620;
+  --sz-mist: #d7e7df;
+  --sz-ember: #ff6b2c;
+  --sz-jade: #3dff9a;
+  --sz-jade-dim: #1fa86a;
+  --sz-gold: #f0c45c;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-mist: var(--mist);
+  --color-paper: var(--paper);
+  --color-fog: var(--fog);
+  --color-signal: var(--signal);
+  --color-signal-deep: var(--signal-deep);
+  --color-steel: var(--steel);
+  --color-sz-void: var(--sz-void);
+  --color-sz-panel: var(--sz-panel);
+  --color-sz-mist: var(--sz-mist);
+  --color-sz-ember: var(--sz-ember);
+  --color-sz-jade: var(--sz-jade);
+  --color-sz-jade-dim: var(--sz-jade-dim);
+  --color-sz-gold: var(--sz-gold);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--signal) 35%, white);
+  color: var(--ink);
+}
+
+.pro-atmosphere {
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(194, 59, 34, 0.16), transparent 55%),
+    radial-gradient(900px 500px at -10% 20%, rgba(91, 107, 130, 0.22), transparent 50%),
+    linear-gradient(165deg, #f7f8fb 0%, #e7ecf4 48%, #dfe6f1 100%);
+}
+
+.sz-atmosphere {
+  background:
+    radial-gradient(900px 600px at 70% 10%, rgba(61, 255, 154, 0.12), transparent 55%),
+    radial-gradient(700px 500px at 10% 80%, rgba(255, 107, 44, 0.14), transparent 50%),
+    radial-gradient(500px 400px at 90% 90%, rgba(240, 196, 92, 0.08), transparent 45%),
+    linear-gradient(180deg, #05080c 0%, #0b121a 50%, #071018 100%);
+}
+
+.display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+.section-pad {
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reactor-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes serpent-drift {
+  0% {
+    transform: translate3d(-2%, 0, 0) rotate(-2deg);
+  }
+  50% {
+    transform: translate3d(2%, -1.5%, 0) rotate(2deg);
+  }
+  100% {
+    transform: translate3d(-2%, 0, 0) rotate(-2deg);
+  }
+}
+
+@keyframes ribbon-flow {
+  from {
+    stroke-dashoffset: 420;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.8s ease both;
+}
+
+.animate-rise-delay-1 {
+  animation: rise-in 0.8s ease 0.1s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise-in 0.8s ease 0.2s both;
+}
+
+.animate-rise-delay-3 {
+  animation: rise-in 0.8s ease 0.3s both;
+}
+
+.reactor {
+  animation: reactor-pulse 3.6s ease-in-out infinite;
+}
+
+.serpent {
+  animation: serpent-drift 9s ease-in-out infinite;
+}
+
+.ribbon {
+  stroke-dasharray: 420;
+  animation: ribbon-flow 4.5s ease-in-out infinite alternate;
+}
+
+.orbit {
+  animation: orbit-spin 18s linear infinite;
+}
+
+.float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-rise,
+  .animate-rise-delay-1,
+  .animate-rise-delay-2,
+  .animate-rise-delay-3,
+  .reactor,
+  .serpent,
+  .ribbon,
+  .orbit,
+  .float-soft {
+    animation: none !important;
+  }
+}
