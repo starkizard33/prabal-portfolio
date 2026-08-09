@@ -13,7 +13,7 @@ export function Contact() {
             Contact
           </p>
           <h2 className="display mt-3 max-w-xl text-4xl font-bold tracking-tight md:text-5xl">
-            Let&apos;s talk systems, chess engines, or clearance bugs.
+            Let&apos;s talk clearing systems, engines, or scale bugs.
           </h2>
           <div className="mt-8 flex flex-wrap gap-3">
             <a

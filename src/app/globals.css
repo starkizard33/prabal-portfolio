@@ -4,12 +4,14 @@
   --ink: #12151c;
   --ink-soft: #2a3140;
   --mist: #e8ecf2;
-  --paper: #f3f5f8;
-  --fog: #c5cedd;
-  --signal: #c23b22;
-  --signal-deep: #8f2a18;
+  --paper: #eef2f6;
+  --fog: #b8c4d4;
+  --signal: #1f4f7a;
+  --signal-deep: #163a5c;
   --steel: #5b6b82;
-  --glow: rgba(194, 59, 34, 0.18);
+  --blueprint: #3a6ea5;
+  --blueprint-line: rgba(58, 110, 165, 0.14);
+  --glow: rgba(58, 110, 165, 0.16);
 
   --sz-void: #070b10;
   --sz-panel: #0f1620;
@@ -34,6 +36,7 @@
   --color-signal: var(--signal);
   --color-signal-deep: var(--signal-deep);
   --color-steel: var(--steel);
+  --color-blueprint: var(--blueprint);
   --color-sz-void: var(--sz-void);
   --color-sz-panel: var(--sz-panel);
   --color-sz-mist: var(--sz-mist);
@@ -57,15 +60,15 @@ body {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--signal) 35%, white);
+  background: color-mix(in oklab, var(--blueprint) 32%, white);
   color: var(--ink);
 }
 
 .pro-atmosphere {
   background:
-    radial-gradient(1200px 700px at 85% -10%, rgba(194, 59, 34, 0.16), transparent 55%),
-    radial-gradient(900px 500px at -10% 20%, rgba(91, 107, 130, 0.22), transparent 50%),
-    linear-gradient(165deg, #f7f8fb 0%, #e7ecf4 48%, #dfe6f1 100%);
+    radial-gradient(1100px 640px at 88% -8%, rgba(58, 110, 165, 0.14), transparent 56%),
+    radial-gradient(860px 480px at -8% 18%, rgba(91, 107, 130, 0.18), transparent 52%),
+    linear-gradient(168deg, #f5f7fa 0%, #e8eef5 46%, #dde6f0 100%);
 }
 
 .sz-atmosphere {
@@ -84,6 +87,27 @@ body {
   padding-inline: clamp(1.25rem, 4vw, 3.5rem);
 }
 
+.blueprint-grid {
+  background-image:
+    linear-gradient(to right, var(--blueprint-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--blueprint-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 85% 70% at 60% 40%, black 20%, transparent 75%);
+}
+
+.blueprint-grid-drift {
+  background-image:
+    linear-gradient(to right, rgba(58, 110, 165, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(58, 110, 165, 0.09) 1px, transparent 1px);
+  background-size: 24px 24px;
+  animation: grid-drift 28s linear infinite;
+  mask-image: linear-gradient(180deg, black 35%, transparent 92%);
+}
+
+.stack-plaque {
+  animation: plaque-float 6.5s ease-in-out infinite;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -92,6 +116,25 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-24px, -24px, 0);
+  }
+}
+
+@keyframes plaque-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
   }
 }
 
@@ -194,7 +237,9 @@ body {
   .serpent,
   .ribbon,
   .orbit,
-  .float-soft {
+  .float-soft,
+  .blueprint-grid-drift,
+  .stack-plaque {
     animation: none !important;
   }
 }

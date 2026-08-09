@@ -2,7 +2,9 @@ export const profile = {
   name: "Prabal Kalia",
   handle: "starkizard",
   title: "SDE II at Zeta",
-  tagline: "I build systems that clear money, optimize ads, and occasionally play chess at 2500+.",
+  tagline:
+    "Clearing networks, matching logic, and rule engines — systems that stay correct under load.",
+  stackPlaque: "Java · Spring Boot · Microservices · Kafka · AWS",
   location: "India",
   email: "mail2prabalkalia@gmail.com",
   phone: "+91 8130580250",
@@ -106,7 +108,7 @@ export const profile = {
     {
       name: "BetaZero Chess Engine",
       description:
-        "C++ chess engine with Alpha-Beta (PVS). Reached 2500+ Lichess rating.",
+        "C++ engine with Alpha-Beta (PVS). Engine credit: 2500+ Lichess.",
       href: "https://github.com/starkizard",
       tags: ["C++", "Search", "Chess"],
     },

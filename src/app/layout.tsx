@@ -26,12 +26,12 @@ export const metadata: Metadata = {
     template: "%s · Prabal Kalia",
   },
   description:
-    "SDE II at Zeta. Payments clearing, systems at scale, and competitive programming — also known as starkizard.",
+    "SDE II at Zeta. Java, Spring Boot, microservices, Kafka, AWS — payments clearing and systems at scale.",
   metadataBase: new URL("https://prabal-kalia.local"),
   openGraph: {
-    title: "Prabal Kalia",
+    title: "Prabal Kalia · SDE II at Zeta",
     description:
-      "Software engineer at Zeta. Builder, CP enthusiast, starkizard off-duty.",
+      "Clearing systems, matching logic, and rule engines. Builder and starkizard off-duty.",
     type: "website",
   },
 };
