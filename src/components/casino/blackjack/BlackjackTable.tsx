@@ -21,6 +21,8 @@ import {
 } from "@/casino/engine/shoe";
 import {
   basicStrategy,
+  pairKey,
+  upCol,
   type StrategyAction,
   type StrategyInput,
 } from "@/casino/engine/strategy/basic";
@@ -32,7 +34,10 @@ import { useCasinoSession } from "@/casino/session/CasinoSessionContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CountPanel } from "./CountPanel";
 import { Playmat } from "./Playmat";
-import { StrategyPanel } from "./StrategyPanel";
+import {
+  StrategyPanel,
+  type StrategyHighlight,
+} from "./StrategyPanel";
 
 const CHIP_STEPS = [10, 25, 50, 100, 200] as const;
 
@@ -185,8 +190,31 @@ function buttonHighlight(
   return null;
 }
 
+function strategyHighlightFor(
+  input: StrategyInput | null,
+): StrategyHighlight | null {
+  if (!input) return null;
+  const up = upCol(input.dealerUp);
+  if (input.pairRank !== undefined) {
+    const key = pairKey(input.pairRank);
+    if (key !== null) return { chart: "pairs", row: key, up };
+  }
+  if (input.soft) return { chart: "soft", row: String(input.playerTotal), up };
+  const total = Math.min(21, Math.max(4, input.playerTotal));
+  return { chart: "hard", row: String(total), up };
+}
+
+function isUnresolvedPhase(phase: BjState["phase"]): boolean {
+  return phase === "insurance" || phase === "player" || phase === "dealer";
+}
+
 export function BlackjackTable() {
-  const { state: session, adjustBankroll, recordHand } = useCasinoSession();
+  const {
+    state: session,
+    adjustBankroll,
+    recordHand,
+    registerTableAbandon,
+  } = useCasinoSession();
   const [bet, setBet] = useState(50);
   const [round, setRound] = useState<BjState | null>(null);
   const [basicOn, setBasicOn] = useState(false);
@@ -194,6 +222,36 @@ export function BlackjackTable() {
   const [runningCount, setRunningCount] = useState(sessionRunningCount);
   const [message, setMessage] = useState("Place a bet and deal.");
   const settledApplied = useRef(false);
+  const roundRef = useRef<BjState | null>(null);
+  const abandonedRef = useRef(false);
+
+  roundRef.current = round;
+
+  function abandonUnresolvedRound(): number {
+    if (abandonedRef.current) return 0;
+    const current = roundRef.current;
+    if (!current || !isUnresolvedPhase(current.phase)) return 0;
+    if (settledApplied.current) return 0;
+
+    abandonedRef.current = true;
+    const refund = stakesOnTable(current);
+    publishShoe(discardRound(current));
+    roundRef.current = null;
+    setRound(null);
+    setMessage("Hand abandoned — stakes returned.");
+    return refund;
+  }
+
+  useEffect(() => {
+    registerTableAbandon(abandonUnresolvedRound);
+    return () => {
+      const refund = abandonUnresolvedRound();
+      if (refund > 0) adjustBankroll(refund);
+      registerTableAbandon(null);
+    };
+    // Register once; abandon reads latest round via refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount/unmount lifecycle
+  }, []);
 
   useEffect(() => {
     if (!round) return;
@@ -260,6 +318,7 @@ export function BlackjackTable() {
     shoe = maybeReshuffle(shoe);
     publishShoe(shoe);
     settledApplied.current = false;
+    abandonedRef.current = false;
     adjustBankroll(-bet);
     const next = createBjRound(shoe, bet);
     commit(next, next.message || "Your play");
@@ -314,6 +373,8 @@ export function BlackjackTable() {
 
   const phase = round?.phase ?? "betting";
   const showBetControls = !round || phase === "settled" || phase === "betting";
+  const chartHighlight =
+    basicOn && phase === "player" ? strategyHighlightFor(stratInput) : null;
 
   function highlight(action: Exclude<BjAction, "deal">) {
     if (action === "insurance" && insuranceCue) return "gold" as const;
@@ -506,10 +567,7 @@ export function BlackjackTable() {
       {basicOn || countOn ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {basicOn ? (
-            <StrategyPanel
-              recommend={basicRec}
-              highlightJade={basicOn && phase === "player"}
-            />
+            <StrategyPanel recommend={basicRec} highlight={chartHighlight} />
           ) : null}
           {countOn ? (
             <CountPanel

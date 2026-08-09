@@ -45,12 +45,20 @@ function previewSummary(state: {
 }
 
 export default function CasinoLobbyPage() {
-  const { state, leaveCasino } = useCasinoSession();
+  const { state, leaveCasino, abandonActiveTable, adjustBankroll } =
+    useCasinoSession();
   const router = useRouter();
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
   function handleLeaveRequest() {
-    setSummary(previewSummary(state));
+    const refund = abandonActiveTable();
+    if (refund > 0) adjustBankroll(refund);
+    setSummary(
+      previewSummary({
+        ...state,
+        bankroll: state.bankroll + refund,
+      }),
+    );
   }
 
   function handleConfirmLeave() {

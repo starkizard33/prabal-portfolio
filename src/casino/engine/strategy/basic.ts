@@ -19,7 +19,7 @@ type Cell = ChartCell;
 
 export type UpCol = "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "A";
 
-function upCol(rank: Rank): UpCol {
+export function upCol(rank: Rank): UpCol {
   if (rank === "J" || rank === "Q" || rank === "K") return "10";
   if (rank === "10" || rank === "A") return rank;
   return rank as UpCol;
@@ -105,7 +105,7 @@ export const PAIRS_CHART: Record<string, Record<UpCol, Cell>> = {
   "2": { "2": "P", "3": "P", "4": "P", "5": "P", "6": "P", "7": "P", "8": "H", "9": "H", "10": "H", A: "H" },
 };
 
-function pairKey(rank: Rank): string | null {
+export function pairKey(rank: Rank): string | null {
   if (rank === "A") return "A";
   if (isTenRank(rank)) return "T";
   if (rank === "5") return null;

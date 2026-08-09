@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -28,13 +29,20 @@ export type SessionSummary = {
   net: number;
 };
 
+/** Returns stake refund amount after discarding in-progress table cards. */
+export type TableAbandonHandler = () => number;
+
 type CasinoSessionContextValue = {
   state: CasinoSessionState;
   enterCasino: () => void;
+  rebuyCasino: () => void;
   leaveCasino: () => SessionSummary;
   adjustBankroll: (delta: number) => void;
   recordHand: () => void;
   recordSpin: () => void;
+  registerTableAbandon: (handler: TableAbandonHandler | null) => void;
+  /** Run registered table abandon (refund caller via returned amount). */
+  abandonActiveTable: () => number;
 };
 
 const inactiveState = (): CasinoSessionState => ({
@@ -44,6 +52,15 @@ const inactiveState = (): CasinoSessionState => ({
   hands: 0,
   spins: 0,
   startedAt: null,
+});
+
+const activeBuyInState = (): CasinoSessionState => ({
+  active: true,
+  bankroll: CASINO_BUY_IN,
+  startBankroll: CASINO_BUY_IN,
+  hands: 0,
+  spins: 0,
+  startedAt: Date.now(),
 });
 
 const CasinoSessionContext = createContext<CasinoSessionContextValue | null>(
@@ -67,20 +84,31 @@ function summarize(
 
 export function CasinoSessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CasinoSessionState>(inactiveState);
+  const tableAbandonRef = useRef<TableAbandonHandler | null>(null);
 
   function enterCasino() {
-    setState({
-      active: true,
-      bankroll: CASINO_BUY_IN,
-      startBankroll: CASINO_BUY_IN,
-      hands: 0,
-      spins: 0,
-      startedAt: Date.now(),
-    });
+    setState(activeBuyInState());
+  }
+
+  function rebuyCasino() {
+    setState(activeBuyInState());
+  }
+
+  function registerTableAbandon(handler: TableAbandonHandler | null) {
+    tableAbandonRef.current = handler;
+  }
+
+  function abandonActiveTable(): number {
+    return tableAbandonRef.current?.() ?? 0;
   }
 
   function leaveCasino(): SessionSummary {
-    const summary = summarize(state, Date.now());
+    const refund = abandonActiveTable();
+    const settled = {
+      ...state,
+      bankroll: state.bankroll + refund,
+    };
+    const summary = summarize(settled, Date.now());
     setState(inactiveState());
     return summary;
   }
@@ -111,10 +139,13 @@ export function CasinoSessionProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         enterCasino,
+        rebuyCasino,
         leaveCasino,
         adjustBankroll,
         recordHand,
         recordSpin,
+        registerTableAbandon,
+        abandonActiveTable,
       }}
     >
       {children}
@@ -130,4 +161,8 @@ export function useCasinoSession(): CasinoSessionContextValue {
     );
   }
   return context;
+}
+
+export function useOptionalCasinoSession(): CasinoSessionContextValue | null {
+  return useContext(CasinoSessionContext);
 }

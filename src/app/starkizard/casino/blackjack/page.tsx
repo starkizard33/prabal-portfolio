@@ -32,7 +32,8 @@ function previewSummary(state: {
 }
 
 export default function CasinoBlackjackPage() {
-  const { state, leaveCasino } = useCasinoSession();
+  const { state, leaveCasino, abandonActiveTable, adjustBankroll } =
+    useCasinoSession();
   const router = useRouter();
   const [summary, setSummary] = useState<SessionSummary | null>(null);
 
@@ -41,6 +42,17 @@ export default function CasinoBlackjackPage() {
       router.replace("/starkizard/casino");
     }
   }, [state.active, router]);
+
+  function handleLeaveRequest() {
+    const refund = abandonActiveTable();
+    if (refund > 0) adjustBankroll(refund);
+    setSummary(
+      previewSummary({
+        ...state,
+        bankroll: state.bankroll + refund,
+      }),
+    );
+  }
 
   if (!state.active) {
     return (
@@ -65,7 +77,7 @@ export default function CasinoBlackjackPage() {
             ← Lobby
           </Link>
         </div>
-        <SessionHud onLeave={() => setSummary(previewSummary(state))} />
+        <SessionHud onLeave={handleLeaveRequest} />
         <div className="mt-8">
           <BlackjackTable />
         </div>

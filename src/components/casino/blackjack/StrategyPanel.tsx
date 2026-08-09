@@ -13,43 +13,46 @@ const HARD_ROWS = [17, 16, 15, 14, 13, 12, 11, 10, 9, 8];
 const SOFT_ROWS = [20, 19, 18, 17, 16, 15, 14, 13];
 const PAIR_ROWS = ["A", "T", "9", "8", "7", "6", "4", "3", "2"] as const;
 
+export type StrategyHighlight = {
+  chart: "hard" | "soft" | "pairs";
+  row: string;
+  up: UpCol;
+};
+
 type StrategyPanelProps = {
   recommend: StrategyAction | null;
-  highlightJade: boolean;
+  highlight: StrategyHighlight | null;
 };
 
 function cellClass(
-  cell: ChartCell,
-  recommend: StrategyAction | null,
-  highlightJade: boolean,
+  chart: StrategyHighlight["chart"],
+  row: string,
+  up: UpCol,
+  highlight: StrategyHighlight | null,
 ): string {
-  if (!highlightJade || !recommend) {
-    return "text-sz-mist/70";
+  if (
+    highlight &&
+    highlight.chart === chart &&
+    highlight.row === row &&
+    highlight.up === up
+  ) {
+    return "bg-sz-jade/25 text-sz-jade font-semibold shadow-[0_0_12px_rgba(61,255,154,0.25)]";
   }
-  const matches =
-    cell === recommend ||
-    (recommend === "D" && (cell === "Dh" || cell === "Ds" || cell === "D")) ||
-    (recommend === "R" && (cell === "Rh" || cell === "Rp" || cell === "R")) ||
-    (recommend === "H" && (cell === "H" || cell === "Dh" || cell === "Rh")) ||
-    (recommend === "S" && (cell === "S" || cell === "Ds")) ||
-    (recommend === "P" && (cell === "P" || cell === "Rp"));
-  return matches
-    ? "bg-sz-jade/25 text-sz-jade font-semibold shadow-[0_0_12px_rgba(61,255,154,0.25)]"
-    : "text-sz-mist/70";
+  return "text-sz-mist/70";
 }
 
 function MiniChart({
   title,
+  chart,
   rowLabels,
   rows,
-  recommend,
-  highlightJade,
+  highlight,
 }: {
   title: string;
+  chart: StrategyHighlight["chart"];
   rowLabels: string[];
   rows: Record<string | number, Record<UpCol, ChartCell>>;
-  recommend: StrategyAction | null;
-  highlightJade: boolean;
+  highlight: StrategyHighlight | null;
 }) {
   return (
     <div>
@@ -79,7 +82,7 @@ function MiniChart({
                   return (
                     <td
                       key={up}
-                      className={`p-1 ${cellClass(cell, recommend, highlightJade)}`}
+                      className={`p-1 ${cellClass(chart, label, up, highlight)}`}
                     >
                       {cell}
                     </td>
@@ -94,7 +97,7 @@ function MiniChart({
   );
 }
 
-export function StrategyPanel({ recommend, highlightJade }: StrategyPanelProps) {
+export function StrategyPanel({ recommend, highlight }: StrategyPanelProps) {
   return (
     <aside className="space-y-5 border border-sz-jade/20 bg-sz-panel/60 p-4">
       <div>
@@ -110,24 +113,24 @@ export function StrategyPanel({ recommend, highlightJade }: StrategyPanelProps) 
       </div>
       <MiniChart
         title="Hard"
+        chart="hard"
         rowLabels={HARD_ROWS.map(String)}
         rows={HARD_CHART}
-        recommend={recommend}
-        highlightJade={highlightJade}
+        highlight={highlight}
       />
       <MiniChart
         title="Soft"
+        chart="soft"
         rowLabels={SOFT_ROWS.map(String)}
         rows={SOFT_CHART}
-        recommend={recommend}
-        highlightJade={highlightJade}
+        highlight={highlight}
       />
       <MiniChart
         title="Pairs"
+        chart="pairs"
         rowLabels={[...PAIR_ROWS]}
         rows={PAIRS_CHART}
-        recommend={recommend}
-        highlightJade={highlightJade}
+        highlight={highlight}
       />
       <p className="border-t border-white/10 pt-3 text-[11px] leading-relaxed text-sz-mist/45">
         Educational approximation of standard multi-deck S17 DAS LS charts
