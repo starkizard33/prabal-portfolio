@@ -1,7 +1,7 @@
 /**
  * Truth Comes Out prompts.
- * Use {name} and optionally {name2} — at most two spotlight players.
- * Wording pushes short, punchy answers (not essays).
+ * Open-ended, short creative answers — never A-or-B / multiple choice.
+ * {name} / optional {name2} — at most two spotlight players.
  */
 
 export type PromptTemplate = {
@@ -14,103 +14,103 @@ export const TRUTH_COMES_OUT_PROMPTS: PromptTemplate[] = [
   // —— one person ——
   {
     id: "celebrity-scandal",
-    template: "If {name} were a celebrity, what's the scandal headline?",
+    template: "Write the tabloid headline if {name} became famous.",
   },
   {
     id: "useless-superpower",
-    template: "What useless superpower would {name} somehow make cool?",
+    template: "Invent a useless superpower that somehow fits {name}.",
   },
   {
     id: "reality-show",
-    template: "Which reality show would {name} win?",
+    template: "Name the reality show {name} would somehow win.",
   },
   {
     id: "hot-take",
-    template: "What's {name}'s hottest take they'd deny in public?",
+    template: "What's a hot take {name} believes but won't say out loud?",
   },
   {
     id: "zombie-role",
-    template: "In a zombie apocalypse, what's {name}'s actual job?",
+    template: "In a zombie apocalypse, what job would {name} actually get stuck with?",
   },
   {
     id: "lied-about",
-    template: "What has {name} definitely lied about?",
+    template: "What has {name} definitely lied about before?",
   },
   {
     id: "search-history",
-    template: "Top of {name}'s search history right now?",
+    template: "What is at the top of {name}'s search history right now?",
   },
   {
     id: "wedding-speech",
-    template: "First line of {name}'s disastrous wedding speech?",
+    template: "Write the opening line of {name}'s disastrous wedding speech.",
   },
   {
     id: "petty-crime",
-    template: "What petty crime would {name} commit then confess?",
+    template: "What petty crime would {name} commit and then immediately confess?",
   },
   {
     id: "chatgpt-2am",
-    template: "What would {name} ask ChatGPT at 2am?",
+    template: "What would {name} type into ChatGPT at 2am?",
   },
   {
     id: "roommate-habit",
-    template: "Worst roommate habit {name} definitely has?",
+    template: "What roommate habit does {name} definitely have?",
   },
   {
     id: "autobiography",
-    template: "{name}'s autobiography title?",
+    template: "Invent the title of {name}'s autobiography.",
   },
   {
     id: "first-date-ruin",
-    template: "How does {name} ruin a first date in under 10 minutes?",
+    template: "What would {name} do to ruin a first date in under 10 minutes?",
   },
   {
     id: "karaoke-destroy",
-    template: "What song would {name} destroy at karaoke?",
+    template: "What karaoke song would {name} absolutely butcher?",
   },
   {
     id: "villain-catchphrase",
-    template: "If {name} were a movie villain, what's the catchphrase?",
+    template: "If {name} were a movie villain, what catchphrase would they use?",
   },
   {
     id: "time-travel-ban",
-    template: "What year should {name} be banned from time-traveling to?",
+    template: "Name a year {name} should never be allowed to time-travel to.",
   },
   {
     id: "group-chat-energy",
-    template: "{name}'s group-chat energy in three words?",
+    template: "Sum up {name}'s group-chat energy in three words.",
   },
   {
     id: "cancel-excuse",
-    template: "{name}'s most creative last-minute cancel excuse?",
+    template: "Invent {name}'s most creative excuse for canceling last minute.",
   },
   {
     id: "autocorrect",
-    template: "Cursed autocorrect {name} has definitely sent?",
+    template: "What cursed autocorrect has {name} definitely sent?",
   },
   {
     id: "childish-habit",
-    template: "Most childish thing {name} still does?",
+    template: "What childish thing does {name} still do?",
   },
   {
     id: "guilty-playlist",
-    template: "Most embarrassing song on {name}'s playlist?",
+    template: "What embarrassing song is secretly on {name}'s playlist?",
   },
   {
     id: "alone-weird",
-    template: "Weirdest thing {name} does alone?",
+    template: "What weird thing does {name} do when nobody's watching?",
   },
   {
     id: "impress-fail",
-    template: "Most ridiculous thing {name} did to impress someone?",
+    template: "What ridiculous thing has {name} done just to impress someone?",
   },
   {
     id: "hangry-denial",
-    template: "What does hangry {name} say while claiming they're fine?",
+    template: "What does {name} say when they're hangry but swear they're fine?",
   },
   {
     id: "main-character",
-    template: "{name}'s LinkedIn bio if fully unhinged?",
+    template: "Write {name}'s LinkedIn headline if they were fully unhinged.",
   },
   {
     id: "last-drink",
@@ -118,121 +118,121 @@ export const TRUTH_COMES_OUT_PROMPTS: PromptTemplate[] = [
   },
   {
     id: "phone-lock",
-    template: "What's on {name}'s lock screen that shouldn't be?",
+    template: "What's on {name}'s lock screen that they hope nobody notices?",
   },
   {
     id: "shower-argument",
-    template: "What argument does {name} rehearse in the shower?",
+    template: "What argument does {name} practice winning in the shower?",
   },
   {
     id: "vending-machine",
-    template: "What would {name} yell at a self-checkout?",
+    template: "What would {name} yell at a broken self-checkout?",
   },
   {
     id: "meme-origin",
-    template: "How does {name} become a meme?",
+    template: "How would {name} accidentally become a meme?",
   },
   {
     id: "horoscope-lie",
-    template: "Fake horoscope {name} would 100% believe?",
+    template: "Invent a fake horoscope that {name} would fully believe.",
   },
   {
     id: "podcast-guest",
-    template: "Podcast episode title that is just {name}?",
+    template: "Invent a podcast episode title that is just {name}'s personality.",
   },
   {
     id: "cooking-disaster",
-    template: "Kitchen crime {name} calls \"cooking\"?",
+    template: "What kitchen disaster does {name} still call \"cooking\"?",
   },
   {
     id: "fitness-era",
-    template: "{name}'s shortest-lived fitness era?",
+    template: "Name {name}'s shortest-lived fitness phase.",
   },
   {
     id: "browser-tabs",
-    template: "What's open in {name}'s 47 browser tabs?",
+    template: "Name one tab open in {name}'s chaos of 47 browser tabs.",
   },
   {
     id: "voice-note",
-    template: "First 5 seconds of {name}'s typical voice note?",
+    template: "What are the first few words of {name}'s typical voice note?",
   },
   {
     id: "airport-energy",
-    template: "{name}'s airport personality in three words?",
+    template: "Sum up {name}'s airport personality in three words.",
   },
   {
     id: "netflix-crime",
-    template: "Show {name} rewatches and pretends is new?",
+    template: "What show does {name} rewatch and pretend they've never seen?",
   },
   {
     id: "birthday-gift",
-    template: "Worst gift {name} was excited to receive?",
+    template: "What's the worst gift {name} was weirdly excited to receive?",
   },
   {
     id: "conspiracy",
-    template: "Conspiracy theory {name} would fall for immediately?",
+    template: "What conspiracy theory would {name} fall for immediately?",
   },
 
   // —— two people ——
   {
     id: "duo-reality",
-    template: "Reality show title if {name} and {name2} co-hosted?",
+    template: "Invent a reality-show title for {name} and {name2} as co-hosts.",
   },
   {
     id: "duo-crime",
-    template: "What heist would {name} and {name2} botch?",
+    template: "What heist would {name} and {name2} attempt and immediately mess up?",
   },
   {
     id: "duo-argument",
-    template: "Petty 1am fight between {name} and {name2}?",
+    template: "What petty thing would {name} and {name2} argue about at 1am?",
   },
   {
     id: "duo-roadtrip",
-    template: "What ends the {name} + {name2} road trip?",
+    template: "What would make {name} and {name2} stop speaking on a road trip?",
   },
   {
     id: "duo-startup",
-    template: "Worst startup name from {name} and {name2}?",
+    template: "Invent the worst startup name pitched by {name} and {name2}.",
   },
   {
     id: "duo-escape-room",
-    template: "Why are {name} and {name2} banned from escape rooms?",
+    template: "Why did an escape room ban {name} and {name2}?",
   },
   {
     id: "duo-dating-show",
-    template: "On a dating show, {name}'s red flag about {name2}?",
+    template: "On a dating show, what red flag would {name} call out about {name2}?",
   },
   {
     id: "duo-group-project",
-    template: "In a group project, what does {name} do to {name2}?",
+    template: "In a group project, what annoying thing does {name} do to {name2}?",
   },
   {
     id: "duo-wedding",
-    template: "Toast line {name} ruins {name2}'s wedding with?",
+    template: "What toast line would {name} say that ruins {name2}'s wedding?",
   },
   {
     id: "duo-survival",
-    template: "Stranded: what chore does {name} dump on {name2}?",
+    template: "Stranded on an island, what chore does {name} dump on {name2}?",
   },
   {
     id: "duo-podcast",
-    template: "Toxic podcast name for {name} and {name2}?",
+    template: "Invent a toxic podcast name for {name} and {name2}.",
   },
   {
     id: "duo-text",
-    template: "Last text {name} sends {name2} before blocking?",
+    template: "Write the last text {name} sends {name2} before blocking them over nothing.",
   },
   {
     id: "duo-costume",
-    template: "Worst couples costume for {name} and {name2}?",
+    template: "Invent the worst couples costume for {name} and {name2}.",
   },
   {
     id: "duo-ikea",
-    template: "How does the {name} + {name2} IKEA trip end?",
+    template: "How does an IKEA trip end for {name} and {name2}?",
   },
   {
     id: "duo-therapy",
-    template: "One-word diagnosis for {name} and {name2}'s friendship?",
+    template: "In one word, what would a therapist call {name} and {name2}'s friendship?",
   },
 ];
 

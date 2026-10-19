@@ -16,7 +16,11 @@ function assertPromptShape(p: { template: string }) {
     /whole group|this group|who(?:'s| is) most likely|among (?:us|you all)/,
   );
   expect(p.template.toLowerCase()).not.toMatch(
-    /\b(describe|explain|transcribe|narrate)\b/,
+    /\b(describe|transcribe|narrate)\b/,
+  );
+  // No A-or-B / pick-one-of-two player choices
+  expect(p.template).not.toMatch(
+    /\b(or \{name2\}|\{name\} or \{name2\}|worse rizz:|who gets more)\b/i,
   );
 }
 
