@@ -1,6 +1,10 @@
 "use client";
 
-import type { ClientMessage, RoomState } from "@shared/playProtocol";
+import type {
+  ClientMessage,
+  PsychDeckId,
+  RoomState,
+} from "@shared/playProtocol";
 import { MAX_ANSWER_LEN } from "@shared/playProtocol";
 import { useMemo, useState } from "react";
 
@@ -11,26 +15,33 @@ type PsychGameProps = {
   send: (msg: ClientMessage) => void;
 };
 
-const DECKS = [
+const DECKS: {
+  id: PsychDeckId | "soon";
+  title: string;
+  blurb: string;
+  color: string;
+  live: boolean;
+}[] = [
   {
-    id: "truth-comes-out" as const,
+    id: "truth-comes-out",
     title: "Truth Comes Out",
     blurb: "7 rounds of anonymous takes about this room. Vote for the best.",
     color: "var(--play-coral)",
     live: true,
   },
   {
-    id: "soon-a",
-    title: "Hot Takes",
-    blurb: "Coming soon.",
-    color: "var(--play-yellow)",
-    live: false,
+    id: "truth-comes-out-nsfw",
+    title: "Truth Comes Out · NSFW",
+    blurb:
+      "18+ · Spicy, messy, funny. Same rules — anonymous answers, then vote.",
+    color: "var(--play-pink)",
+    live: true,
   },
   {
-    id: "soon-b",
-    title: "Chaos Mode",
+    id: "soon",
+    title: "More decks",
     blurb: "Coming soon.",
-    color: "var(--play-pink)",
+    color: "var(--play-yellow)",
     live: false,
   },
 ];
@@ -109,8 +120,12 @@ function DeckPicker({
             type="button"
             disabled={!isHost || !deck.live}
             onClick={() => {
-              if (deck.live && deck.id === "truth-comes-out") {
-                send({ type: "start_deck", deckId: "truth-comes-out" });
+              if (
+                deck.live &&
+                (deck.id === "truth-comes-out" ||
+                  deck.id === "truth-comes-out-nsfw")
+              ) {
+                send({ type: "start_deck", deckId: deck.id });
               }
             }}
             className="play-card text-left disabled:cursor-not-allowed disabled:opacity-45"
@@ -123,7 +138,11 @@ function DeckPicker({
             <p className="text-lg font-bold">{deck.title}</p>
             <p className="mt-1 text-sm opacity-80">{deck.blurb}</p>
             <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider opacity-70">
-              {deck.live ? "7 rounds · tap to start" : "soon"}
+              {deck.live
+                ? deck.id === "truth-comes-out-nsfw"
+                  ? "18+ · 7 rounds · tap to start"
+                  : "7 rounds · tap to start"
+                : "soon"}
             </p>
           </button>
         ))}

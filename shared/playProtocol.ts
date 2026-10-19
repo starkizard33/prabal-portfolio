@@ -43,8 +43,10 @@ export type RoomState = {
   psych: PsychPublicState | null;
 };
 
+export type PsychDeckId = "truth-comes-out" | "truth-comes-out-nsfw";
+
 export type PsychPublicState = {
-  deckId: "truth-comes-out";
+  deckId: PsychDeckId;
   deckTitle: string;
   round: number;
   totalRounds: number;
@@ -71,7 +73,7 @@ export type ClientMessage =
   | ({ type: "ping" } & WithClient)
   | ({ type: "open_psych" } & WithClient)
   | ({ type: "back_to_lobby" } & WithClient)
-  | ({ type: "start_deck"; deckId: "truth-comes-out" } & WithClient)
+  | ({ type: "start_deck"; deckId: PsychDeckId } & WithClient)
   | ({ type: "submit_answer"; text: string } & WithClient)
   | ({ type: "submit_vote"; answerId: string } & WithClient)
   | ({ type: "advance" } & WithClient);

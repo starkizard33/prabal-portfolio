@@ -7,16 +7,14 @@ import {
   PSYCH_TOTAL_ROUNDS,
   type ClientMessage,
   type Player,
+  type PsychDeckId,
   type PsychPublicState,
   type RoomPhase,
   type RoomState,
   type ServerMessage,
 } from "../../shared/playProtocol";
-import {
-  fillPrompt,
-  pickPrompts,
-  type PromptTemplate,
-} from "./psych/truthComesOut";
+import { pickDeckPrompts, resolveDeck } from "./psych/decks";
+import { fillPrompt, type PromptTemplate } from "./psych/truthComesOut";
 
 type InternalAnswer = {
   answerId: string;
@@ -25,7 +23,7 @@ type InternalAnswer = {
 };
 
 type PsychInternal = {
-  deckId: "truth-comes-out";
+  deckId: PsychDeckId;
   deckTitle: string;
   prompts: PromptTemplate[];
   roundIndex: number;
@@ -375,7 +373,7 @@ export class Lobby extends Server {
 
   private handleStartDeck(
     connection: Connection,
-    deckId: "truth-comes-out",
+    deckId: PsychDeckId,
     clientId?: string,
   ) {
     if (!this.requireHost(connection, clientId)) return;
@@ -383,7 +381,8 @@ export class Lobby extends Server {
       this.sendError(connection, "Can't start a deck right now.");
       return;
     }
-    if (deckId !== "truth-comes-out") {
+    const deck = resolveDeck(deckId);
+    if (!deck) {
       this.sendError(connection, "Unknown deck.");
       return;
     }
@@ -398,14 +397,14 @@ export class Lobby extends Server {
     for (const p of this.players.values()) p.score = 0;
 
     const seed = Date.now() % 2147483647;
-    const prompts = pickPrompts(PSYCH_TOTAL_ROUNDS, seed);
+    const prompts = pickDeckPrompts(deck.id, PSYCH_TOTAL_ROUNDS, seed);
     const activeIds = new Set([...this.players.keys()]);
     const names = [...this.players.values()].map((p) => p.name);
     const question = fillPrompt(prompts[0]!.template, names, seed + 1);
 
     this.psych = {
-      deckId: "truth-comes-out",
-      deckTitle: "Truth Comes Out",
+      deckId: deck.id,
+      deckTitle: deck.title,
       prompts,
       roundIndex: 0,
       question,

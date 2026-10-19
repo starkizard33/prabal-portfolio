@@ -251,8 +251,12 @@ export const TRUTH_COMES_OUT_PROMPTS: PromptTemplate[] = [
   },
 ];
 
-export function pickPrompts(count: number, seed: number): PromptTemplate[] {
-  const shuffled = [...TRUTH_COMES_OUT_PROMPTS];
+export function pickPrompts(
+  count: number,
+  seed: number,
+  pool: PromptTemplate[] = TRUTH_COMES_OUT_PROMPTS,
+): PromptTemplate[] {
+  const shuffled = [...pool];
   let s = seed || 1;
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
     s = (s * 16807) % 2147483647;
