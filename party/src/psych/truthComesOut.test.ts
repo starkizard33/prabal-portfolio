@@ -15,6 +15,9 @@ function assertPromptShape(p: { template: string }) {
   expect(p.template.toLowerCase()).not.toMatch(
     /whole group|this group|who(?:'s| is) most likely|among (?:us|you all)/,
   );
+  expect(p.template.toLowerCase()).not.toMatch(
+    /\b(describe|explain|transcribe|narrate)\b/,
+  );
 }
 
 describe("truthComesOut prompts", () => {

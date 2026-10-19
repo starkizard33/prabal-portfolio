@@ -1,6 +1,6 @@
 /**
  * NSFW Truth Comes Out — spicy but funny prompts (18+).
- * Max two spotlight players. Written for laugh-out-loud answers, not cruelty.
+ * Short-answer friendly. Max two spotlight players.
  */
 
 import type { PromptTemplate } from "./truthComesOut";
@@ -9,119 +9,119 @@ export const TRUTH_COMES_OUT_NSFW_PROMPTS: PromptTemplate[] = [
   // —— one person ——
   {
     id: "nsfw-search",
-    template: "What's the most damning thing in {name}'s search history?",
+    template: "Most damning thing in {name}'s search history?",
   },
   {
     id: "nsfw-wrong-text",
-    template: "What's the raciest text {name} has definitely sent to the wrong person?",
+    template: "Raciest text {name} sent to the wrong person?",
   },
   {
     id: "nsfw-ick",
-    template: "What's the fastest way to give {name} the ick?",
+    template: "Fastest way to give {name} the ick?",
   },
   {
     id: "nsfw-flirt-crime",
-    template: "Describe {name}'s flirting style like a nature documentary.",
+    template: "{name}'s flirting style in three words?",
   },
   {
     id: "nsfw-situationship",
-    template: "Explain {name}'s love life to their grandma — be honest.",
+    template: "One sentence: {name}'s love life to grandma?",
   },
   {
     id: "nsfw-red-flag",
-    template: "What's {name}'s biggest red flag that they somehow make charismatic?",
+    template: "{name}'s biggest red flag they somehow pull off?",
   },
   {
     id: "nsfw-green-flag-lie",
-    template: "What green flag does {name} claim to have but absolutely does not?",
+    template: "Green flag {name} claims but doesn't have?",
   },
   {
     id: "nsfw-drunk-voice",
-    template: "What's {name} like at 2am after two drinks — one sentence.",
+    template: "{name} after two drinks at 2am — three words?",
   },
   {
     id: "nsfw-dating-app",
-    template: "Write {name}'s unhinged dating-app bio.",
+    template: "{name}'s unhinged dating-app bio (one line)?",
   },
   {
     id: "nsfw-first-date",
-    template: "How does {name} accidentally make a first date weird in under 5 minutes?",
+    template: "How does {name} make a first date weird in 5 minutes?",
   },
   {
     id: "nsfw-kiss-review",
-    template: "Write a Yelp review of kissing {name}.",
+    template: "One-star Yelp line for kissing {name}?",
   },
   {
     id: "nsfw-bedroom-playlist",
-    template: "What's playing on {name}'s \"romantic\" playlist — be brave.",
+    template: "Song on {name}'s \"romantic\" playlist?",
   },
   {
     id: "nsfw-guilty",
-    template: "What's {name}'s most embarrassing bedroom-adjacent guilty pleasure?",
+    template: "{name}'s most embarrassing guilty pleasure?",
   },
   {
     id: "nsfw-fantasy-boring",
-    template: "What's the most boring thing {name} would still somehow make spicy?",
+    template: "Most boring thing {name} could still make spicy?",
   },
   {
     id: "nsfw-celebrity",
-    template: "Which celebrity would {name} ruin their life for — and how messily?",
+    template: "Which celebrity would {name} ruin their life for?",
   },
   {
     id: "nsfw-ex-text",
-    template: "Write the text {name} sends their ex at 1:17am and instantly regrets.",
+    template: "Regret text {name} sends an ex at 1:17am?",
   },
   {
     id: "nsfw-body-count-lie",
-    template: "What number would {name} claim… and what would their friends whisper?",
+    template: "Number {name} claims vs the real whisper?",
   },
   {
     id: "nsfw-caught",
-    template: "What's the most \"got caught\" story {name} almost certainly has?",
+    template: "{name}'s most \"got caught\" moment?",
   },
   {
     id: "nsfw-kink-denial",
-    template: "What kink does {name} deny having while making it extremely obvious?",
+    template: "Kink {name} denies while making it obvious?",
   },
   {
     id: "nsfw-turn-off",
-    template: "What's {name}'s secret turn-off that would end a date instantly?",
+    template: "{name}'s instant date-ending turn-off?",
   },
   {
     id: "nsfw-turn-on-weird",
-    template: "What's the weirdest thing that would somehow work on {name}?",
+    template: "Weirdest thing that would somehow work on {name}?",
   },
   {
     id: "nsfw-hookup-excuse",
-    template: "What's {name}'s go-to excuse the morning after?",
+    template: "{name}'s morning-after excuse?",
   },
   {
     id: "nsfw-thirst-trap",
-    template: "Describe {name}'s thirst-trap strategy in three words.",
+    template: "{name}'s thirst-trap strategy in three words?",
   },
   {
     id: "nsfw-parents",
-    template: "What's the one thing {name} would die if their parents found out?",
+    template: "Secret {name} would die if parents found?",
   },
   {
     id: "nsfw-dream",
-    template: "Invent the most cursed dream {name} has had about someone in this room.",
+    template: "Cursed dream {name} had about someone here?",
   },
   {
     id: "nsfw-pickup",
-    template: "What's the cheesiest pickup line that would actually work on {name}?",
+    template: "Cheesy pickup line that would work on {name}?",
   },
   {
     id: "nsfw-soft-launch",
-    template: "How would {name} soft-launch a situationship on Instagram?",
+    template: "{name}'s situationship soft-launch caption?",
   },
   {
     id: "nsfw-jealous",
-    template: "What petty thing makes {name} jealous and then deny it?",
+    template: "Petty thing that makes {name} jealous?",
   },
   {
     id: "nsfw-voice-note",
-    template: "Transcribe {name}'s most chaotic flirty voice note.",
+    template: "Opening line of {name}'s flirty voice note?",
   },
   {
     id: "nsfw-locker",
@@ -129,84 +129,72 @@ export const TRUTH_COMES_OUT_NSFW_PROMPTS: PromptTemplate[] = [
   },
   {
     id: "nsfw-walk-of-shame",
-    template: "Outfit for {name}'s walk of shame — be specific.",
+    template: "{name}'s walk-of-shame outfit?",
   },
   {
     id: "nsfw-roleplay",
-    template: "Worst roleplay scenario {name} would still try once.",
+    template: "Worst roleplay {name} would still try once?",
   },
   {
     id: "nsfw-consent-chaos",
-    template: "What's {name}'s idea of \"reading the room\" on a night out?",
+    template: "{name}'s idea of \"reading the room\" tonight?",
   },
   {
     id: "nsfw-screenshot",
-    template: "What screenshot is sitting in {name}'s camera roll that should not exist?",
+    template: "Screenshot that should not be in {name}'s camera roll?",
   },
   {
     id: "nsfw-villain",
-    template: "Narrate {name}'s dating villain origin story in one line.",
+    template: "{name}'s dating villain origin — one line?",
   },
 
   // —— two people ——
   {
     id: "nsfw-duo-tension",
-    template:
-      "What's the unspoken tension between {name} and {name2} that everyone else can see?",
+    template: "Unspoken vibe between {name} and {name2}?",
   },
   {
     id: "nsfw-duo-kiss",
-    template:
-      "If {name} and {name2} had to kiss for a movie scene, how awkward does it get?",
+    template: "Movie-kiss awkwardness score: {name} + {name2}?",
   },
   {
     id: "nsfw-duo-dating",
-    template:
-      "On a dating show, what's {name}'s savage first impression of {name2}?",
+    template: "{name}'s savage first take on {name2}?",
   },
   {
     id: "nsfw-duo-texts",
-    template:
-      "Write the flirty-but-deniable texts between {name} and {name2}.",
+    template: "Flirty-but-deniable text from {name} to {name2}?",
   },
   {
     id: "nsfw-duo-dare",
-    template:
-      "What's the worst \"truth or dare\" outcome if {name} dared {name2}?",
+    template: "Worst dare {name} gives {name2}?",
   },
   {
     id: "nsfw-duo-hotel",
-    template:
-      "Hotel room with one bed: how do {name} and {name2} handle it — comedy version.",
+    template: "One bed: what do {name} and {name2} do?",
   },
   {
     id: "nsfw-duo-jealous",
-    template:
-      "Who gets more jealous when the other flirts with someone — {name} or {name2} — and why?",
+    template: "Who gets more jealous — {name} or {name2}?",
   },
   {
     id: "nsfw-duo-soft-launch",
-    template:
-      "Caption the soft-launch photo of {name} and {name2}.",
+    template: "Soft-launch caption for {name} and {name2}?",
   },
   {
     id: "nsfw-duo-breakup",
-    template:
-      "Invent the pettiest breakup reason between {name} and {name2}.",
+    template: "Pettiest {name} / {name2} breakup reason?",
   },
   {
     id: "nsfw-duo-therapy",
-    template:
-      "What would couples therapy diagnose about {name} and {name2} in one sentence?",
+    template: "One-word couples-therapy label for {name} + {name2}?",
   },
   {
     id: "nsfw-duo-rizz",
-    template:
-      "Who has worse rizz, {name} or {name2}? Defend your answer with evidence.",
+    template: "Worse rizz: {name} or {name2}?",
   },
   {
     id: "nsfw-duo-scandal",
-    template:
-      "Tabloid headline if {name} and {name2} got caught in a \"scandal.\"",
+    template: "Tabloid headline: {name} + {name2}?",
   },
 ];
