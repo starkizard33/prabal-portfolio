@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+.play-root {
+  --play-bg: #000000;
+  --play-text: #ffffff;
+  --play-text-muted: #a9a9a9;
+  --play-surface: #18181a;
+  --play-surface-alt: #222225;
+  --play-coral: #ff9f91;
+  --play-peach: #ffae7d;
+  --play-pink: #d765ac;
+  --play-yellow: #ffb82e;
+  --play-orange: #ff7a00;
+  --play-cyan: #00a9d9;
+  --play-purple: #b85fc7;
+  --play-radius-sm: 8px;
+  --play-radius-md: 12px;
+  --play-radius-lg: 16px;
+  --play-radius-xl: 20px;
+  --play-radius-pill: 999px;
+  --play-font: var(--font-play), system-ui, sans-serif;
+
+  min-height: 100dvh;
+  background: var(--play-bg);
+  color: var(--play-text);
+  font-family: var(--play-font);
+}
+
+.play-root * {
+  box-sizing: border-box;
+}
+
+.play-card {
+  border-radius: var(--play-radius-lg);
+  padding: 16px 18px;
+  transition: transform 160ms ease-out;
+}
+
+.play-card:active {
+  transform: scale(0.98) translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-card,
+  .play-card:active {
+    transition: none;
+    transform: none;
+  }
+}
