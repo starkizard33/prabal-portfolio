@@ -11,16 +11,7 @@ import { readSingleTable } from "@/lib/play/singleTable";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type Phase =
-  | "rules"
-  | "pass"
-  | "role"
-  | "board"
-  | "confirm-death"
-  | "accusers"
-  | "accuse-choice"
-  | "pick-suspect"
-  | "win";
+type Phase = "rules" | "pass" | "role" | "board" | "confirm-death" | "win";
 
 export function MurderGame() {
   const [names, setNames] = useState<string[]>([]);
@@ -29,7 +20,6 @@ export function MurderGame() {
   const [phase, setPhase] = useState<Phase>("rules");
   const [revealIndex, setRevealIndex] = useState(0);
   const [pendingName, setPendingName] = useState<string | null>(null);
-  const [accusers, setAccusers] = useState<string[]>([]);
 
   useEffect(() => {
     setNames(readSingleTable());
@@ -40,7 +30,6 @@ export function MurderGame() {
     const dealt = dealRoles(names);
     setSeats(dealt);
     setRevealIndex(0);
-    setAccusers([]);
     setPendingName(null);
     setPhase("pass");
   }
@@ -50,18 +39,6 @@ export function MurderGame() {
       seat.name === name ? { ...seat, alive: false } : seat,
     );
     setSeats(next);
-    setPendingName(null);
-    setAccusers([]);
-    setPhase(murderWinner(next) ? "win" : "board");
-  }
-
-  function killMany(deadNames: string[]) {
-    const dead = new Set(deadNames);
-    const next = seats.map((seat) =>
-      dead.has(seat.name) ? { ...seat, alive: false } : seat,
-    );
-    setSeats(next);
-    setAccusers([]);
     setPendingName(null);
     setPhase(murderWinner(next) ? "win" : "board");
   }
@@ -91,7 +68,7 @@ export function MurderGame() {
     return (
       <Shell>
         <h1 className="text-4xl font-bold text-white">Murder</h1>
-        <ol className="mt-5 space-y-3 text-sm leading-relaxed text-[var(--play-text-muted)]">
+        <ol className="mt-5 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-[var(--play-text-muted)]">
           <li>Pass the phone. Each person sees a secret role, then hides it.</li>
           <li>
             Murderers kill with a wink. If you&apos;re winked at, wait 2 seconds,
@@ -102,8 +79,16 @@ export function MurderGame() {
             point together.
           </li>
           <li>
-            Same suspect: they&apos;re dead. Different suspects: the accusers are
-            out.
+            If you point at the same person, they tap their name. They&apos;re
+            dead.
+          </li>
+          <li>
+            If you point at different people, the accusers tap their own names.
+            They&apos;re out.
+          </li>
+          <li>
+            Civilians win when every murderer is dead. Murderers win when every
+            civilian is dead.
           </li>
         </ol>
         <p className="mt-5 text-sm text-white">
@@ -217,7 +202,8 @@ export function MurderGame() {
       <Shell>
         <h1 className="text-4xl font-bold text-white">{pendingName} dies?</h1>
         <p className="mt-3 text-sm text-[var(--play-text-muted)]">
-          Only after the wink, the two-second wait, and crossed arms.
+          A wink, or the person everyone pointed at, or an accuser who pointed
+          the wrong way.
         </p>
         <button
           type="button"
@@ -240,112 +226,23 @@ export function MurderGame() {
     );
   }
 
-  if (phase === "accusers" || phase === "accuse-choice" || phase === "pick-suspect") {
-    const alive = seats.filter((seat) => seat.alive);
-    return (
-      <Shell>
-        <h1 className="text-3xl font-bold text-white">Accusation</h1>
-        {phase === "accusers" ? (
-          <>
-            <p className="mt-2 text-sm text-[var(--play-text-muted)]">
-              Tap everyone with a hand up. You need 2.
-            </p>
-            <NameGrid
-              seats={alive}
-              selected={accusers}
-              onPick={(name) =>
-                setAccusers((current) =>
-                  current.includes(name)
-                    ? current.filter((item) => item !== name)
-                    : [...current, name],
-                )
-              }
-            />
-            <button
-              type="button"
-              disabled={accusers.length < 2}
-              onClick={() => setPhase("accuse-choice")}
-              className="play-card mt-6 w-full bg-[var(--play-yellow)] py-3 text-base font-semibold text-[#121212] disabled:opacity-40"
-            >
-              They pointed
-            </button>
-          </>
-        ) : null}
-        {phase === "accuse-choice" ? (
-          <div className="mt-6 flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => setPhase("pick-suspect")}
-              className="play-card w-full bg-[var(--play-coral)] py-4 text-left text-[#121212]"
-            >
-              <p className="text-base font-bold">Same person</p>
-              <p className="mt-1 text-sm opacity-80">That suspect is dead.</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => killMany(accusers)}
-              className="play-card w-full bg-[var(--play-surface-alt)] py-4 text-left text-white"
-            >
-              <p className="text-base font-bold">Different people</p>
-              <p className="mt-1 text-sm text-[var(--play-text-muted)]">
-                {accusers.join(" and ")} are out.
-              </p>
-            </button>
-          </div>
-        ) : null}
-        {phase === "pick-suspect" ? (
-          <>
-            <p className="mt-2 text-sm text-[var(--play-text-muted)]">
-              Who did they point at?
-            </p>
-            <NameGrid
-              seats={alive}
-              selected={[]}
-              onPick={(name) => kill(name)}
-            />
-          </>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => {
-            setAccusers([]);
-            setPhase("board");
-          }}
-          className="mt-4 w-full py-3 text-sm text-[var(--play-text-muted)]"
-        >
-          Cancel
-        </button>
-      </Shell>
-    );
-  }
-
   return (
     <Shell>
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--play-text-muted)]">
         Murder
       </p>
-      <h1 className="mt-2 text-3xl font-bold text-white">Who died?</h1>
+      <h1 className="mt-2 text-3xl font-bold text-white">Who&apos;s out?</h1>
       <p className="mt-2 text-sm text-[var(--play-text-muted)]">
-        Wink. Wait 2 seconds. Cross your arms. Tap your name.
+        Tap the person who was winked at, the person everyone pointed at, or an
+        accuser who pointed the wrong way.
       </p>
       <NameGrid
         seats={seats}
-        selected={[]}
         onPick={(name) => {
           setPendingName(name);
           setPhase("confirm-death");
         }}
       />
-      <button
-        type="button"
-        onClick={() => {
-          setAccusers([]);
-          setPhase("accusers");
-        }}
-        className="play-card mt-6 w-full bg-[var(--play-yellow)] py-3 text-base font-semibold text-[#121212]"
-      >
-        Accusation
-      </button>
     </Shell>
   );
 }
@@ -366,17 +263,14 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function NameGrid({
   seats,
-  selected,
   onPick,
 }: {
   seats: Pick<MurderSeat, "name" | "alive">[];
-  selected: string[];
   onPick: (name: string) => void;
 }) {
   return (
     <ul className="mt-6 grid grid-cols-2 gap-4">
       {seats.map((seat) => {
-        const picked = selected.includes(seat.name);
         return (
           <li key={seat.name}>
             <button
@@ -385,12 +279,10 @@ function NameGrid({
               onClick={() => onPick(seat.name)}
               className="flex min-h-32 w-full flex-col items-center justify-center rounded-[var(--play-radius-xl)] px-3 text-center text-xl font-bold disabled:opacity-40"
               style={{
-                background: picked
-                  ? "var(--play-yellow)"
-                  : seat.alive
-                    ? "var(--play-surface)"
-                    : "var(--play-surface-alt)",
-                color: picked ? "#121212" : "#fff",
+                background: seat.alive
+                  ? "var(--play-surface)"
+                  : "var(--play-surface-alt)",
+                color: "#fff",
               }}
             >
               <span className={seat.alive ? undefined : "line-through"}>
