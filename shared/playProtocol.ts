@@ -84,6 +84,11 @@ export type GhostPublicState = {
 
 export const GHOST_TOTAL_ROUNDS = 7;
 
+/** Clock times, to the millisecond: 3500 → "3.500 seconds". */
+export function formatGhostTime(ms: number): string {
+  return `${(ms / 1000).toFixed(3)} seconds`;
+}
+
 export type PsychDeckId = "truth-comes-out" | "truth-comes-out-nsfw";
 
 export type PsychPublicState = {

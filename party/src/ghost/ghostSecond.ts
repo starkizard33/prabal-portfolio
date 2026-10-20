@@ -38,7 +38,7 @@ export function trustedElapsed(
 }
 
 export function formatStop(elapsedMs: number): string {
-  return `${(elapsedMs / 1000).toFixed(1)}s`;
+  return `${(elapsedMs / 1000).toFixed(3)} seconds`;
 }
 
 export function rankByError(
@@ -60,5 +60,5 @@ export function rankByError(
 }
 
 export function formatTarget(targetMs: number): string {
-  return `${(targetMs / 1000).toFixed(1)}s`;
+  return `${(targetMs / 1000).toFixed(3)} seconds`;
 }

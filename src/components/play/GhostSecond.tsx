@@ -1,11 +1,11 @@
 "use client";
 
-import type { ClientMessage, GhostPublicState } from "@shared/playProtocol";
+import {
+  formatGhostTime,
+  type ClientMessage,
+  type GhostPublicState,
+} from "@shared/playProtocol";
 import { useEffect, useRef, useState } from "react";
-
-function formatStop(elapsedMs: number): string {
-  return `${(elapsedMs / 1000).toFixed(1)}s`;
-}
 
 type GhostSecondProps = {
   ghost: GhostPublicState;
@@ -76,11 +76,11 @@ export function GhostSecond({
       <p className="mt-2 text-center text-sm text-[var(--play-text-muted)]">
         Feel this long. You won&apos;t see your clock.
       </p>
-      <p className="mt-5 font-mono text-6xl font-bold tracking-tight text-white sm:text-7xl">
-        {ghost.targetLabel}
+      <p className="mt-5 font-mono text-5xl font-bold tracking-tight text-white sm:text-7xl">
+        {(ghost.targetMs / 1000).toFixed(3)}
       </p>
       <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--play-text-muted)]">
-        {ghost.final ? "lowest total wins" : "target · lowest miss wins"}
+        {ghost.final ? "seconds · lowest total wins" : "seconds"}
       </p>
 
       <button
@@ -114,9 +114,9 @@ export function GhostSecond({
           ? "You joined mid-round."
           : done && (elapsedMs != null || ghost.youErrorMs != null)
             ? ghost.youAutoStopped
-              ? "Auto-stopped at 30s."
+              ? `Auto-stopped at ${formatGhostTime(30_000)}.`
               : elapsedMs != null
-                ? `You stopped at ${formatStop(elapsedMs)}${
+                ? `You stopped at ${formatGhostTime(elapsedMs)}${
                     ghost.youErrorMs != null
                       ? ` · ${ghost.youErrorMs.toLocaleString()} ms off`
                       : ""
@@ -152,7 +152,7 @@ export function GhostSecond({
                 {ghost.final
                   ? `${row.totalMs.toLocaleString()} ms`
                   : row.elapsedMs != null
-                    ? `${formatStop(row.elapsedMs)} · ${row.errorMs.toLocaleString()} ms`
+                    ? `${formatGhostTime(row.elapsedMs)} · ${row.errorMs.toLocaleString()} ms`
                     : `${row.errorMs.toLocaleString()} ms`}
                 {!ghost.final ? (
                   <span className="mt-0.5 block text-[10px] opacity-70">

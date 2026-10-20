@@ -4,6 +4,8 @@ import {
   GHOST_MAX_MS,
   GHOST_MIN_HOLD_MS,
   GHOST_MIN_MS,
+  formatStop,
+  formatTarget,
   pickTargetMs,
   rankByError,
   scoreAttempt,
@@ -12,6 +14,11 @@ import {
 } from "./ghostSecond";
 
 describe("Ghost Second scoring", () => {
+  test("shows the target and the stop to the millisecond", () => {
+    expect(formatTarget(3500)).toBe("3.500 seconds");
+    expect(formatStop(3742)).toBe("3.742 seconds");
+  });
+
   test("picks a shared target between 0.5s and 10.5s in 0.1s steps", () => {
     for (let i = 0; i <= 100; i += 1) {
       const ms = pickTargetMs(() => i / 100);
