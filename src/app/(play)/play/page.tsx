@@ -1,5 +1,5 @@
-import { PlayLobby } from "@/components/play/PlayLobby";
+import { PlayChoice } from "@/components/play/PlayChoice";
 
 export default function PlayHomePage() {
-  return <PlayLobby />;
+  return <PlayChoice />;
 }

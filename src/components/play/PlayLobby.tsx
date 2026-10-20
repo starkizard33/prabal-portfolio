@@ -4,6 +4,7 @@ import {
   generateRoomCode,
   normalizeRoomCode,
 } from "@/lib/play/roomCode";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -78,8 +79,14 @@ export function PlayLobby() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-14">
-      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--play-text-muted)] sm:text-xs">
-        play.starkizard
+      <Link
+        href="/play"
+        className="text-sm text-[var(--play-text-muted)] underline-offset-2 hover:text-white hover:underline"
+      >
+        ← How are you playing?
+      </Link>
+      <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--play-text-muted)] sm:text-xs">
+        On your own devices
       </p>
       <h1 className="mt-2 text-[1.85rem] font-bold leading-[1.08] tracking-tight text-white sm:mt-3 sm:text-5xl">
         Party games.
