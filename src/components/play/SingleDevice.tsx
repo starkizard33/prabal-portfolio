@@ -1,21 +1,8 @@
 "use client";
 
+import { readSingleTable, SINGLE_TABLE_KEY, SINGLE_TABLE_MAX } from "@/lib/play/singleTable";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
-
-const STORAGE_KEY = "play:singleNames";
-const MAX_NAMES = 8;
-
-function readNames(): string[] {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((name): name is string => typeof name === "string");
-  } catch {
-    return [];
-  }
-}
 
 export function SingleDevice() {
   const [names, setNames] = useState<string[]>([]);
@@ -24,14 +11,14 @@ export function SingleDevice() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setNames(readNames());
+    setNames(readSingleTable());
     setReady(true);
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(names));
+      sessionStorage.setItem(SINGLE_TABLE_KEY, JSON.stringify(names));
     } catch {
       /* ignore */
     }
@@ -48,8 +35,8 @@ export function SingleDevice() {
       setError("That name is already in.");
       return;
     }
-    if (names.length >= MAX_NAMES) {
-      setError(`That's the table limit (${MAX_NAMES}).`);
+    if (names.length >= SINGLE_TABLE_MAX) {
+      setError(`That's the table limit (${SINGLE_TABLE_MAX}).`);
       return;
     }
     setNames((current) => [...current, name]);
@@ -125,8 +112,17 @@ export function SingleDevice() {
       <p className="mt-6 text-sm text-[var(--play-text-muted)]">
         {names.length < 2
           ? `${names.length}/2 names. Add ${2 - names.length} more.`
-          : `${names.length} playing. Pass-the-phone games will use this list.`}
+          : `${names.length} playing.`}
       </p>
+
+      {names.length >= 2 ? (
+        <Link
+          href="/play/single/games"
+          className="play-card mt-4 block bg-[var(--play-yellow)] py-3 text-center text-base font-semibold text-[#121212]"
+        >
+          Continue
+        </Link>
+      ) : null}
     </main>
   );
 }
