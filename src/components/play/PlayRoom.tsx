@@ -1,5 +1,6 @@
 "use client";
 
+import { GhostSecond } from "@/components/play/GhostSecond";
 import { PsychGame } from "@/components/play/PsychGame";
 import { usePlayRoom } from "@/hooks/usePlayRoom";
 import { MIN_PLAYERS_TO_START } from "@shared/playProtocol";
@@ -44,6 +45,9 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
   } = usePlayRoom(code, name);
 
   const players = room?.players ?? [];
+  const inGhost =
+    room && (room.phase === "ghost_play" || room.phase === "ghost_result");
+
   const inPsych =
     room &&
     room.phase !== "lobby" &&
@@ -76,7 +80,14 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
         {isSpectator ? " · spectating" : null}
       </p>
 
-      {inPsych && room ? (
+      {inGhost && room?.ghost ? (
+        <GhostSecond
+          ghost={room.ghost}
+          isHost={isHost}
+          isSpectator={isSpectator}
+          send={send}
+        />
+      ) : inPsych && room ? (
         <div className="mt-8">
           <PsychGame
             room={room}
@@ -152,6 +163,26 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
                   ? players.length < MIN_PLAYERS_TO_START
                     ? `Need ${MIN_PLAYERS_TO_START}+ players`
                     : "Tap to open decks"
+                  : "Waiting for host"}
+              </p>
+            </button>
+
+            <button
+              type="button"
+              disabled={!isHost || players.length < MIN_PLAYERS_TO_START}
+              onClick={() => send({ type: "open_ghost" })}
+              className="play-card w-full bg-[#3dff9a] text-left disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ color: "#121212", transform: "rotate(1deg)" }}
+            >
+              <p className="text-lg font-bold">Ghost Second</p>
+              <p className="mt-1 text-sm opacity-80">
+                Same target. Hidden clock. Closest tap wins.
+              </p>
+              <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider opacity-70">
+                {isHost
+                  ? players.length < MIN_PLAYERS_TO_START
+                    ? `Need ${MIN_PLAYERS_TO_START}+ players`
+                    : "Tap to start"
                   : "Waiting for host"}
               </p>
             </button>

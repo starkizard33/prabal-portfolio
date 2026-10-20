@@ -15,7 +15,9 @@ export type RoomPhase =
   | "psych_answer"
   | "psych_vote"
   | "psych_round_result"
-  | "psych_final";
+  | "psych_final"
+  | "ghost_play"
+  | "ghost_result";
 
 export type AnonymousAnswer = {
   answerId: string;
@@ -41,6 +43,31 @@ export type RoomState = {
   /** Spectators (late joiners) — ids only */
   spectatorIds: string[];
   psych: PsychPublicState | null;
+  ghost: GhostPublicState | null;
+};
+
+export type GhostTapStatus = "idle" | "running" | "done";
+
+export type GhostResultRow = {
+  playerId: string;
+  name: string;
+  errorMs: number;
+  autoStopped: boolean;
+  missed: boolean;
+  rank: number;
+  isYou: boolean;
+};
+
+export type GhostPublicState = {
+  targetMs: number;
+  targetLabel: string;
+  lockedCount: number;
+  activeCount: number;
+  /** Hidden while the round is open so nobody plays off someone else's miss. */
+  results: GhostResultRow[] | null;
+  youStatus: GhostTapStatus;
+  youErrorMs: number | null;
+  youAutoStopped: boolean;
 };
 
 export type PsychDeckId = "truth-comes-out" | "truth-comes-out-nsfw";
@@ -76,7 +103,11 @@ export type ClientMessage =
   | ({ type: "start_deck"; deckId: PsychDeckId } & WithClient)
   | ({ type: "submit_answer"; text: string } & WithClient)
   | ({ type: "submit_vote"; answerId: string } & WithClient)
-  | ({ type: "advance" } & WithClient);
+  | ({ type: "advance" } & WithClient)
+  | ({ type: "open_ghost" } & WithClient)
+  | ({ type: "ghost_tap" } & WithClient)
+  | ({ type: "ghost_end" } & WithClient)
+  | ({ type: "ghost_again" } & WithClient);
 
 export type ServerMessage =
   | { type: "welcome"; connectionId: string; state: RoomState }

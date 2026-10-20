@@ -9,18 +9,54 @@ import {
   type Player,
   type PsychDeckId,
   type PsychPublicState,
+  type GhostPublicState,
   type RoomPhase,
   type RoomState,
   type ServerMessage,
 } from "../../shared/playProtocol";
 import { pickDeckPrompts, resolveDeck } from "./psych/decks";
 import { fillPrompt, type PromptTemplate } from "./psych/truthComesOut";
+import {
+  GHOST_AUTO_STOP_MS,
+  GHOST_MISSED_MS,
+  pickTargetMs,
+  rankByError,
+  scoreAttempt,
+  shouldIgnoreStop,
+  formatTarget,
+} from "./ghost/ghostSecond";
 
 type InternalAnswer = {
   answerId: string;
   authorId: string;
   text: string;
 };
+
+type GhostAttempt = {
+  status: "idle" | "running" | "done";
+  startedAt: number | null;
+  errorMs: number | null;
+  autoStopped: boolean;
+  missed: boolean;
+  timer: ReturnType<typeof setTimeout> | null;
+};
+
+type GhostInternal = {
+  targetMs: number;
+  activeIds: Set<string>;
+  attempts: Map<string, GhostAttempt>;
+};
+
+function freshAttempt(): GhostAttempt {
+  return {
+    status: "idle",
+    startedAt: null,
+    errorMs: null,
+    autoStopped: false,
+    missed: false,
+    timer: null,
+  };
+}
 
 type PsychInternal = {
   deckId: PsychDeckId;
@@ -71,6 +107,7 @@ export class Lobby extends Server {
   phase: RoomPhase = "lobby";
   spectatorIds = new Set<string>();
   psych: PsychInternal | null = null;
+  ghost: GhostInternal | null = null;
   orphanTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   private get hostId(): string | null {
@@ -146,6 +183,19 @@ export class Lobby extends Server {
       case "advance":
         this.handleAdvance(connection, msg.clientId);
         return;
+      case "open_ghost":
+        this.handleOpenGhost(connection, msg.clientId);
+        return;
+      case "ghost_tap":
+        this.bindClient(connection, msg.clientId);
+        this.handleGhostTap(connection);
+        return;
+      case "ghost_end":
+        this.handleGhostEnd(connection, msg.clientId);
+        return;
+      case "ghost_again":
+        this.handleGhostAgain(connection, msg.clientId);
+        return;
       default:
         this.sendError(connection, "Unknown message type");
     }
@@ -181,6 +231,7 @@ export class Lobby extends Server {
             this.psych.activeIds.delete(pid);
             this.maybeProgressAfterDisconnect();
           }
+          this.dropGhostSeat(pid);
         }
       }
 
@@ -241,6 +292,7 @@ export class Lobby extends Server {
       this.players.set(connection.id, seat);
       this.clientToConn.set(clientId, connection.id);
       this.remapPsychIds(prevConn, connection.id);
+      this.remapGhostIds(prevConn, connection.id);
       this.broadcastAll();
       return;
     }
@@ -319,6 +371,7 @@ export class Lobby extends Server {
           p.id = connection.id;
           this.players.set(connection.id, p);
           this.remapPsychIds(pid, connection.id);
+          this.remapGhostIds(pid, connection.id);
         }
         this.clientToConn.set(clientId, connection.id);
         return p;
@@ -366,6 +419,7 @@ export class Lobby extends Server {
     if (!this.requireHost(connection, clientId)) return;
     this.phase = "lobby";
     this.psych = null;
+    this.clearGhost();
     this.spectatorIds.clear();
     for (const p of this.players.values()) p.score = 0;
     this.broadcastAll();
@@ -598,6 +652,223 @@ export class Lobby extends Server {
     }
   }
 
+  private clearGhost() {
+    const ghost = this.ghost;
+    if (!ghost) return;
+    for (const attempt of ghost.attempts.values()) {
+      if (attempt.timer) clearTimeout(attempt.timer);
+    }
+    this.ghost = null;
+  }
+
+  private remapGhostIds(from: string, to: string) {
+    const ghost = this.ghost;
+    if (!ghost) return;
+    if (ghost.activeIds.has(from)) {
+      ghost.activeIds.delete(from);
+      ghost.activeIds.add(to);
+    }
+    const attempt = ghost.attempts.get(from);
+    if (!attempt) return;
+    ghost.attempts.delete(from);
+    ghost.attempts.set(to, attempt);
+  }
+
+  private dropGhostSeat(playerId: string) {
+    const ghost = this.ghost;
+    if (!ghost) return;
+    const attempt = ghost.attempts.get(playerId);
+    if (attempt?.timer) clearTimeout(attempt.timer);
+    ghost.attempts.delete(playerId);
+    ghost.activeIds.delete(playerId);
+    if (ghost.activeIds.size === 0) {
+      this.phase = "lobby";
+      this.clearGhost();
+      return;
+    }
+    this.maybeRevealGhost();
+  }
+
+  private handleOpenGhost(connection: Connection, clientId?: string) {
+    if (!this.requireHost(connection, clientId)) return;
+    if (this.phase !== "lobby") {
+      this.sendError(connection, "Finish the current game first.");
+      return;
+    }
+    if (this.players.size < MIN_PLAYERS_TO_START) {
+      this.sendError(
+        connection,
+        `Need at least ${MIN_PLAYERS_TO_START} players to play.`,
+      );
+      return;
+    }
+    this.beginGhostRound();
+  }
+
+  private handleGhostAgain(connection: Connection, clientId?: string) {
+    if (!this.requireHost(connection, clientId)) return;
+    if (this.phase !== "ghost_result" && this.phase !== "ghost_play") return;
+    const ids = this.ghost
+      ? [...this.ghost.activeIds].filter((id) => this.players.has(id))
+      : [...this.players.keys()];
+    if (ids.length < MIN_PLAYERS_TO_START) {
+      this.sendError(connection, `Need at least ${MIN_PLAYERS_TO_START} players.`);
+      return;
+    }
+    this.beginGhostRound(ids);
+  }
+
+  private beginGhostRound(activeIds?: string[]) {
+    this.clearGhost();
+    const ids = activeIds ?? [...this.players.keys()];
+    const attempts = new Map<string, GhostAttempt>();
+    for (const id of ids) attempts.set(id, freshAttempt());
+    this.ghost = {
+      targetMs: pickTargetMs(),
+      activeIds: new Set(ids),
+      attempts,
+    };
+    this.phase = "ghost_play";
+    this.broadcastAll();
+  }
+
+  private handleGhostTap(connection: Connection) {
+    const ghost = this.ghost;
+    if (!ghost || this.phase !== "ghost_play") {
+      this.sendError(connection, "Ghost Second isn't running.");
+      return;
+    }
+    if (!ghost.activeIds.has(connection.id)) {
+      this.sendError(connection, "You're spectating this round.");
+      return;
+    }
+    const attempt = ghost.attempts.get(connection.id) ?? freshAttempt();
+    ghost.attempts.set(connection.id, attempt);
+
+    if (attempt.status === "done") {
+      this.sendError(connection, "You already locked this round.");
+      return;
+    }
+
+    if (attempt.status === "idle") {
+      attempt.status = "running";
+      attempt.startedAt = Date.now();
+      const playerId = connection.id;
+      attempt.timer = setTimeout(() => {
+        this.autoStopGhost(playerId);
+      }, GHOST_AUTO_STOP_MS);
+      this.broadcastAll();
+      return;
+    }
+
+    const startedAt = attempt.startedAt ?? Date.now();
+    const elapsed = Date.now() - startedAt;
+    if (shouldIgnoreStop(elapsed)) return;
+    this.finishGhost(connection.id, elapsed, false);
+  }
+
+  private autoStopGhost(playerId: string) {
+    const ghost = this.ghost;
+    const attempt = ghost?.attempts.get(playerId);
+    if (!ghost || !attempt || attempt.status !== "running" || !attempt.startedAt) {
+      return;
+    }
+    this.finishGhost(playerId, GHOST_AUTO_STOP_MS, true);
+  }
+
+  private finishGhost(playerId: string, elapsedMs: number, autoStopped: boolean) {
+    const ghost = this.ghost;
+    const attempt = ghost?.attempts.get(playerId);
+    if (!ghost || !attempt || attempt.status === "done") return;
+    if (attempt.timer) clearTimeout(attempt.timer);
+    attempt.timer = null;
+    attempt.status = "done";
+    attempt.autoStopped = autoStopped;
+    attempt.missed = false;
+    attempt.errorMs = scoreAttempt(elapsedMs, ghost.targetMs);
+    this.maybeRevealGhost();
+    this.broadcastAll();
+  }
+
+  private handleGhostEnd(connection: Connection, clientId?: string) {
+    if (!this.requireHost(connection, clientId)) return;
+    const ghost = this.ghost;
+    if (!ghost || this.phase !== "ghost_play") return;
+    for (const id of ghost.activeIds) {
+      const attempt = ghost.attempts.get(id) ?? freshAttempt();
+      ghost.attempts.set(id, attempt);
+      if (attempt.status === "done") continue;
+      if (attempt.status === "running" && attempt.startedAt) {
+        if (attempt.timer) clearTimeout(attempt.timer);
+        attempt.timer = null;
+        attempt.status = "done";
+        attempt.autoStopped = false;
+        attempt.missed = false;
+        attempt.errorMs = scoreAttempt(Date.now() - attempt.startedAt, ghost.targetMs);
+        continue;
+      }
+      attempt.status = "done";
+      attempt.missed = true;
+      attempt.autoStopped = false;
+      attempt.errorMs = GHOST_MISSED_MS;
+    }
+    this.phase = "ghost_result";
+    this.broadcastAll();
+  }
+
+  private maybeRevealGhost() {
+    const ghost = this.ghost;
+    if (!ghost || this.phase !== "ghost_play") return;
+    const allDone = [...ghost.activeIds].every(
+      (id) => ghost.attempts.get(id)?.status === "done",
+    );
+    if (allDone) this.phase = "ghost_result";
+  }
+
+  private ghostPublic(viewerId: string): GhostPublicState | null {
+    const ghost = this.ghost;
+    if (!ghost) return null;
+    const you = ghost.attempts.get(viewerId);
+    const lockedCount = [...ghost.activeIds].filter(
+      (id) => ghost.attempts.get(id)?.status === "done",
+    ).length;
+    const revealed = this.phase === "ghost_result";
+    let results: GhostPublicState["results"] = null;
+    if (revealed) {
+      const rows = [...ghost.activeIds].map((id) => {
+        const attempt = ghost.attempts.get(id);
+        return {
+          id,
+          errorMs: attempt?.errorMs ?? GHOST_MISSED_MS,
+          autoStopped: attempt?.autoStopped ?? false,
+          missed: attempt?.missed ?? true,
+        };
+      });
+      const ranks = rankByError(rows);
+      results = rows
+        .map((row) => ({
+          playerId: row.id,
+          name: this.players.get(row.id)?.name ?? "Someone",
+          errorMs: row.errorMs,
+          autoStopped: row.autoStopped,
+          missed: row.missed,
+          rank: ranks.get(row.id) ?? rows.length,
+          isYou: row.id === viewerId,
+        }))
+        .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+    }
+    return {
+      targetMs: ghost.targetMs,
+      targetLabel: formatTarget(ghost.targetMs),
+      lockedCount,
+      activeCount: ghost.activeIds.size,
+      results,
+      youStatus: you?.status ?? "idle",
+      youErrorMs: you?.status === "done" ? you.errorMs : null,
+      youAutoStopped: you?.status === "done" ? you.autoStopped : false,
+    };
+  }
+
   private snapshotFor(viewerId: string): RoomState {
     const psych = this.psych;
     let psychPublic: PsychPublicState | null = null;
@@ -686,6 +957,7 @@ export class Lobby extends Server {
       phase: this.phase,
       spectatorIds: [...this.spectatorIds],
       psych: psychPublic,
+      ghost: this.ghostPublic(viewerId),
     };
   }
 
