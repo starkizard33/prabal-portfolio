@@ -16,6 +16,7 @@ import {
   type ServerMessage,
 } from "../../shared/playProtocol";
 import { pickDeckPrompts, resolveDeck } from "./psych/decks";
+import { votersByAnswer } from "./psych/revealVotes";
 import { fillPrompt, type PromptTemplate } from "./psych/truthComesOut";
 import {
   GHOST_AUTO_STOP_MS,
@@ -24,6 +25,7 @@ import {
   rankByError,
   scoreAttempt,
   shouldIgnoreStop,
+  trustedElapsed,
   formatTarget,
 } from "./ghost/ghostSecond";
 
@@ -36,6 +38,7 @@ type InternalAnswer = {
 type GhostAttempt = {
   status: "idle" | "running" | "done";
   startedAt: number | null;
+  elapsedMs: number | null;
   errorMs: number | null;
   autoStopped: boolean;
   missed: boolean;
@@ -55,6 +58,7 @@ function freshAttempt(): GhostAttempt {
   return {
     status: "idle",
     startedAt: null,
+    elapsedMs: null,
     errorMs: null,
     autoStopped: false,
     missed: false,
@@ -113,6 +117,8 @@ export class Lobby extends Server {
   psych: PsychInternal | null = null;
   ghost: GhostInternal | null = null;
   orphanTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private lastPersistedPhase: RoomPhase | null = null;
+  private lastPersistedPlayers = -1;
 
   private get hostId(): string | null {
     if (!this.hostClientId) return null;
@@ -192,7 +198,7 @@ export class Lobby extends Server {
         return;
       case "ghost_tap":
         this.bindClient(connection, msg.clientId);
-        this.handleGhostTap(connection);
+        this.handleGhostTap(connection, msg.elapsedMs);
         return;
       case "ghost_end":
         this.handleGhostEnd(connection, msg.clientId);
@@ -311,7 +317,7 @@ export class Lobby extends Server {
     }
 
     const midGame = this.phase !== "lobby" && this.phase !== "psych_decks";
-    if (midGame) {
+    if (midGame && this.phase !== "ghost_play") {
       this.spectatorIds.add(connection.id);
       this.broadcastAll();
       return;
@@ -331,7 +337,23 @@ export class Lobby extends Server {
     });
     this.clientToConn.set(clientId, connection.id);
     if (!this.hostClientId) this.hostClientId = clientId;
+    if (this.phase === "ghost_play") {
+      this.spectatorIds.delete(connection.id);
+      this.enrollGhost(connection.id);
+    }
     this.broadcastAll();
+  }
+
+  /** A seated player who missed the opening still plays this Ghost round. */
+  private enrollGhost(playerId: string) {
+    const ghost = this.ghost;
+    if (!ghost || !this.players.has(playerId)) return;
+    this.spectatorIds.delete(playerId);
+    if (!ghost.totals.has(playerId)) ghost.totals.set(playerId, 0);
+    if (!ghost.activeIds.has(playerId)) ghost.activeIds.add(playerId);
+    if (!ghost.attempts.has(playerId)) {
+      ghost.attempts.set(playerId, freshAttempt());
+    }
   }
 
   private remapPsychIds(from: string, to: string) {
@@ -780,15 +802,18 @@ export class Lobby extends Server {
     ghost.totalsApplied = true;
   }
 
-  private handleGhostTap(connection: Connection) {
+  private handleGhostTap(connection: Connection, clientElapsedMs?: number) {
     const ghost = this.ghost;
     if (!ghost || this.phase !== "ghost_play") {
       this.sendError(connection, "Ghost Second isn't running.");
       return;
     }
     if (!ghost.activeIds.has(connection.id)) {
-      this.sendError(connection, "You're spectating this round.");
-      return;
+      if (!this.players.has(connection.id)) {
+        this.sendError(connection, "You're spectating this round.");
+        return;
+      }
+      this.enrollGhost(connection.id);
     }
     const attempt = ghost.attempts.get(connection.id) ?? freshAttempt();
     ghost.attempts.set(connection.id, attempt);
@@ -805,12 +830,13 @@ export class Lobby extends Server {
       attempt.timer = setTimeout(() => {
         this.autoStopGhost(playerId);
       }, GHOST_AUTO_STOP_MS);
-      this.broadcastAll();
+      this.broadcastAll(false);
       return;
     }
 
     const startedAt = attempt.startedAt ?? Date.now();
-    const elapsed = Date.now() - startedAt;
+    const serverElapsed = Date.now() - startedAt;
+    const elapsed = trustedElapsed(clientElapsedMs, serverElapsed);
     if (shouldIgnoreStop(elapsed)) return;
     this.finishGhost(connection.id, elapsed, false);
   }
@@ -833,9 +859,10 @@ export class Lobby extends Server {
     attempt.status = "done";
     attempt.autoStopped = autoStopped;
     attempt.missed = false;
+    attempt.elapsedMs = elapsedMs;
     attempt.errorMs = scoreAttempt(elapsedMs, ghost.targetMs);
     this.maybeRevealGhost();
-    this.broadcastAll();
+    this.broadcastAll(this.phase !== "ghost_play");
   }
 
   private handleGhostEnd(connection: Connection, clientId?: string) {
@@ -849,10 +876,12 @@ export class Lobby extends Server {
       if (attempt.status === "running" && attempt.startedAt) {
         if (attempt.timer) clearTimeout(attempt.timer);
         attempt.timer = null;
+        const elapsed = Date.now() - attempt.startedAt;
         attempt.status = "done";
         attempt.autoStopped = false;
         attempt.missed = false;
-        attempt.errorMs = scoreAttempt(Date.now() - attempt.startedAt, ghost.targetMs);
+        attempt.elapsedMs = elapsed;
+        attempt.errorMs = scoreAttempt(elapsed, ghost.targetMs);
         continue;
       }
       attempt.status = "done";
@@ -895,6 +924,7 @@ export class Lobby extends Server {
         return {
           id,
           errorMs,
+          elapsedMs: attempt?.elapsedMs ?? null,
           totalMs,
           autoStopped: attempt?.autoStopped ?? false,
           missed: attempt?.missed ?? true,
@@ -911,6 +941,7 @@ export class Lobby extends Server {
           playerId: row.id,
           name: this.players.get(row.id)?.name ?? "Someone",
           errorMs: row.errorMs,
+          elapsedMs: row.missed ? null : row.elapsedMs,
           totalMs: row.totalMs,
           autoStopped: row.autoStopped,
           missed: row.missed,
@@ -929,6 +960,8 @@ export class Lobby extends Server {
       activeCount: ghost.activeIds.size,
       results,
       youStatus: final ? "done" : (you?.status ?? "idle"),
+      youElapsedMs:
+        you?.status === "done" && !you.missed ? you.elapsedMs : null,
       youErrorMs: you?.status === "done" ? you.errorMs : null,
       youAutoStopped: you?.status === "done" ? you.autoStopped : false,
     };
@@ -980,6 +1013,14 @@ export class Lobby extends Server {
         this.phase === "psych_round_result" ||
         this.phase === "psych_final"
       ) {
+        const pickedBy = votersByAnswer(
+          [...psych.votes.entries()]
+            .filter((entry): entry is [string, string] => Boolean(entry[1]))
+            .map(([voterId, answerId]) => ({
+              voterName: this.players.get(voterId)?.name ?? "Someone",
+              answerId,
+            })),
+        );
         roundResults = [...psych.answers.values()]
           .map((a) => ({
             answerId: a.answerId,
@@ -987,6 +1028,7 @@ export class Lobby extends Server {
             authorId: a.authorId,
             authorName: this.players.get(a.authorId)?.name ?? "Someone",
             votes: voteCounts.get(a.answerId) ?? 0,
+            voters: pickedBy.get(a.answerId) ?? [],
             isYou: a.authorId === viewerId,
           }))
           .sort((a, b) => b.votes - a.votes);
@@ -1016,6 +1058,7 @@ export class Lobby extends Server {
 
     return {
       roomCode: this.name.toUpperCase(),
+      youId: viewerId,
       hostId: this.hostId,
       hostClientId: this.hostClientId,
       players: publicPlayers,
@@ -1026,8 +1069,15 @@ export class Lobby extends Server {
     };
   }
 
-  private broadcastAll() {
-    void this.persistLobby();
+  private broadcastAll(persist = true) {
+    const rosterChanged =
+      this.phase !== this.lastPersistedPhase ||
+      this.players.size !== this.lastPersistedPlayers;
+    if (persist && rosterChanged) {
+      this.lastPersistedPhase = this.phase;
+      this.lastPersistedPlayers = this.players.size;
+      void this.persistLobby();
+    }
     for (const conn of this.getConnections()) {
       this.send(conn, {
         type: "state",

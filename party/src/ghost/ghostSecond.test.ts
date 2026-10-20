@@ -8,6 +8,7 @@ import {
   rankByError,
   scoreAttempt,
   shouldIgnoreStop,
+  trustedElapsed,
 } from "./ghostSecond";
 
 describe("Ghost Second scoring", () => {
@@ -26,6 +27,13 @@ describe("Ghost Second scoring", () => {
     expect(scoreAttempt(4700, 5000)).toBe(300);
     expect(scoreAttempt(5300, 5000)).toBe(300);
     expect(scoreAttempt(50_000, 5000)).toBe(GHOST_AUTO_STOP_MS - 5000);
+  });
+
+  test("trusts the phone's stop time when the packet arrives late", () => {
+    expect(trustedElapsed(4200, 5100)).toBe(4200);
+    expect(trustedElapsed(undefined, 5100)).toBe(5100);
+    expect(trustedElapsed(100, 8000)).toBe(8000);
+    expect(trustedElapsed(50_000, 4000)).toBe(4000);
   });
 
   test("ignores a stop that is too fast to be intentional", () => {

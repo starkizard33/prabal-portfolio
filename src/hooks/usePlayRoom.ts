@@ -129,7 +129,9 @@ export function usePlayRoom(code: string, displayName: string) {
       clientId != null &&
       room?.hostClientId != null &&
       room.hostClientId === clientId,
-    isSpectator:
-      connectionId != null && room?.spectatorIds.includes(connectionId),
+    isSpectator: (() => {
+      const youId = room?.youId ?? connectionId;
+      return youId != null && (room?.spectatorIds.includes(youId) ?? false);
+    })(),
   };
 }

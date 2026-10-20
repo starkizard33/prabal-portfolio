@@ -24,6 +24,23 @@ export function shouldIgnoreStop(elapsedMs: number): boolean {
   return elapsedMs < GHOST_MIN_HOLD_MS;
 }
 
+/** Phone clock, unless it claims a stop the server could not have seen. */
+export function trustedElapsed(
+  clientMs: number | undefined,
+  serverMs: number,
+): number {
+  const server = Math.min(Math.max(0, serverMs), GHOST_AUTO_STOP_MS);
+  if (clientMs == null || !Number.isFinite(clientMs)) return server;
+  const claimed = Math.round(clientMs);
+  if (claimed < GHOST_MIN_HOLD_MS || claimed > GHOST_AUTO_STOP_MS) return server;
+  if (server - claimed > 2_000) return server;
+  return claimed;
+}
+
+export function formatStop(elapsedMs: number): string {
+  return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
+
 export function rankByError(
   entries: { id: string; errorMs: number }[],
 ): Map<string, number> {

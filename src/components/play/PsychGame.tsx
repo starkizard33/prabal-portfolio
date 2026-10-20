@@ -295,6 +295,13 @@ function VotePhase({
   );
 }
 
+function pickedLine(names: string[]): string {
+  if (names.length === 0) return "Nobody picked this";
+  if (names.length === 1) return `${names[0]} picked this`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} picked this`;
+  return `${names.slice(0, -1).join(", ")}, and ${names.at(-1)} picked this`;
+}
+
 function RoundResultPhase({
   room,
   psych,
@@ -323,6 +330,9 @@ function RoundResultPhase({
               {r.isYou ? " (you)" : ""} · {r.votes} vote
               {r.votes === 1 ? "" : "s"} · +{r.votes * 100}
               pts
+            </p>
+            <p className="mt-1 text-xs font-semibold text-white">
+              {pickedLine(r.voters ?? [])}
             </p>
           </li>
         ))}

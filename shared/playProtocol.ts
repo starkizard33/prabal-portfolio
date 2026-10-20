@@ -31,11 +31,15 @@ export type RoundResultAnswer = {
   authorName: string;
   authorId: string;
   votes: number;
+  /** Names of players who picked this answer. Present after the vote. */
+  voters: string[];
   isYou: boolean;
 };
 
 export type RoomState = {
   roomCode: string;
+  /** Connection this snapshot was built for. */
+  youId: string;
   hostId: string | null;
   /** Stable host browser id — prefer this for host checks on the client. */
   hostClientId: string | null;
@@ -53,6 +57,8 @@ export type GhostResultRow = {
   playerId: string;
   name: string;
   errorMs: number;
+  /** How long they actually held. Null when they never started. */
+  elapsedMs: number | null;
   totalMs: number;
   autoStopped: boolean;
   missed: boolean;
@@ -71,6 +77,7 @@ export type GhostPublicState = {
   /** Hidden while the round is open so nobody plays off someone else's miss. */
   results: GhostResultRow[] | null;
   youStatus: GhostTapStatus;
+  youElapsedMs: number | null;
   youErrorMs: number | null;
   youAutoStopped: boolean;
 };
@@ -112,7 +119,7 @@ export type ClientMessage =
   | ({ type: "submit_vote"; answerId: string } & WithClient)
   | ({ type: "advance" } & WithClient)
   | ({ type: "open_ghost" } & WithClient)
-  | ({ type: "ghost_tap" } & WithClient)
+  | ({ type: "ghost_tap"; elapsedMs?: number } & WithClient)
   | ({ type: "ghost_end" } & WithClient)
   | ({ type: "ghost_again" } & WithClient);
 

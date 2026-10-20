@@ -1,6 +1,11 @@
 "use client";
 
 import type { ClientMessage, GhostPublicState } from "@shared/playProtocol";
+import { useEffect, useRef, useState } from "react";
+
+function formatStop(elapsedMs: number): string {
+  return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
 
 type GhostSecondProps = {
   ghost: GhostPublicState;
@@ -15,19 +20,52 @@ export function GhostSecond({
   isSpectator,
   send,
 }: GhostSecondProps) {
-  const running = ghost.youStatus === "running";
-  const done = ghost.youStatus === "done";
   const revealed = ghost.results != null;
-  const canTap = !isSpectator && !done && !revealed;
+  const startedAt = useRef<number | null>(null);
+  const arm = useRef<"idle" | "running" | "done">("idle");
+  const [local, setLocal] = useState<"running" | "done" | null>(null);
+  const [localElapsed, setLocalElapsed] = useState<number | null>(null);
 
-  function tap() {
-    if (!canTap) return;
+  useEffect(() => {
+    arm.current = "idle";
+    startedAt.current = null;
+    setLocal(null);
+    setLocalElapsed(null);
+  }, [ghost.round]);
+
+  const running = local === "running" || ghost.youStatus === "running";
+  const done =
+    revealed || local === "done" || ghost.youStatus === "done";
+  const canTap = !isSpectator && !done && !revealed;
+  const elapsedMs = ghost.youElapsedMs ?? localElapsed;
+
+  function tap(event: React.PointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    if (isSpectator || revealed || arm.current === "done") return;
     try {
       navigator.vibrate?.(12);
     } catch {
       /* ignore */
     }
-    send({ type: "ghost_tap" });
+    if (arm.current === "idle" && ghost.youStatus !== "running") {
+      arm.current = "running";
+      startedAt.current = performance.now();
+      setLocal("running");
+      send({ type: "ghost_tap" });
+      return;
+    }
+    if (startedAt.current == null) {
+      arm.current = "done";
+      setLocal("done");
+      send({ type: "ghost_tap" });
+      return;
+    }
+    const held = Math.round(performance.now() - startedAt.current);
+    if (held < 180) return;
+    arm.current = "done";
+    setLocal("done");
+    setLocalElapsed(held);
+    send({ type: "ghost_tap", elapsedMs: held });
   }
 
   return (
@@ -47,18 +85,20 @@ export function GhostSecond({
 
       <button
         type="button"
-        onClick={tap}
+        onPointerDown={tap}
         disabled={!canTap}
         aria-pressed={running}
-        aria-label={running ? "Stop" : done ? "Locked" : "Start"}
-        className="mt-10 flex h-44 w-44 items-center justify-center rounded-full text-lg font-bold text-[#121212] transition-transform active:scale-95 disabled:cursor-default disabled:active:scale-100 sm:h-52 sm:w-52"
         style={{
-          background: running ? "#ff4b3e" : "#3dff9a",
-          opacity: canTap || running ? 1 : 0.55,
-          boxShadow: running
-            ? "0 0 0 10px rgba(255,75,62,0.18)"
-            : "0 0 0 10px rgba(61,255,154,0.16)",
+          background: running && !done ? "#ff4b3e" : "#3dff9a",
+          opacity: canTap || (running && !done) ? 1 : 0.55,
+          boxShadow:
+            running && !done
+              ? "0 0 0 10px rgba(255,75,62,0.18)"
+              : "0 0 0 10px rgba(61,255,154,0.16)",
+          touchAction: "manipulation",
         }}
+        aria-label={done ? "Locked" : running ? "Stop" : "Start"}
+        className="mt-10 flex h-44 w-44 items-center justify-center rounded-full text-lg font-bold text-[#121212] transition-transform active:scale-95 disabled:cursor-default disabled:active:scale-100 sm:h-52 sm:w-52"
       >
         {isSpectator
           ? "Watching"
@@ -72,10 +112,16 @@ export function GhostSecond({
       <p className="mt-4 min-h-5 text-center text-sm text-white">
         {isSpectator
           ? "You joined mid-round."
-          : done && ghost.youErrorMs != null
+          : done && (elapsedMs != null || ghost.youErrorMs != null)
             ? ghost.youAutoStopped
               ? "Auto-stopped at 30s."
-              : `You were ${ghost.youErrorMs.toLocaleString()} ms off.`
+              : elapsedMs != null
+                ? `You stopped at ${formatStop(elapsedMs)}${
+                    ghost.youErrorMs != null
+                      ? ` · ${ghost.youErrorMs.toLocaleString()} ms off`
+                      : ""
+                  }.`
+                : `You were ${ghost.youErrorMs!.toLocaleString()} ms off.`
             : running
               ? "Clock is running. Tap when it feels right."
               : revealed
@@ -105,7 +151,9 @@ export function GhostSecond({
               <span className="text-right font-mono text-sm">
                 {ghost.final
                   ? `${row.totalMs.toLocaleString()} ms`
-                  : `${row.errorMs.toLocaleString()} ms`}
+                  : row.elapsedMs != null
+                    ? `${formatStop(row.elapsedMs)} · ${row.errorMs.toLocaleString()} ms`
+                    : `${row.errorMs.toLocaleString()} ms`}
                 {!ghost.final ? (
                   <span className="mt-0.5 block text-[10px] opacity-70">
                     total {row.totalMs.toLocaleString()}
