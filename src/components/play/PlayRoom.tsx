@@ -46,7 +46,10 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
 
   const players = room?.players ?? [];
   const inGhost =
-    room && (room.phase === "ghost_play" || room.phase === "ghost_result");
+    room &&
+    (room.phase === "ghost_play" ||
+      room.phase === "ghost_result" ||
+      room.phase === "ghost_final");
 
   const inPsych =
     room &&
@@ -176,7 +179,7 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
             >
               <p className="text-lg font-bold">Ghost Second</p>
               <p className="mt-1 text-sm opacity-80">
-                Same target. Hidden clock. Closest tap wins.
+                7 rounds. Hidden clock. Lowest total wins.
               </p>
               <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider opacity-70">
                 {isHost

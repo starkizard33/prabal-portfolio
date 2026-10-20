@@ -17,7 +17,8 @@ export type RoomPhase =
   | "psych_round_result"
   | "psych_final"
   | "ghost_play"
-  | "ghost_result";
+  | "ghost_result"
+  | "ghost_final";
 
 export type AnonymousAnswer = {
   answerId: string;
@@ -52,6 +53,7 @@ export type GhostResultRow = {
   playerId: string;
   name: string;
   errorMs: number;
+  totalMs: number;
   autoStopped: boolean;
   missed: boolean;
   rank: number;
@@ -59,6 +61,9 @@ export type GhostResultRow = {
 };
 
 export type GhostPublicState = {
+  round: number;
+  totalRounds: number;
+  final: boolean;
   targetMs: number;
   targetLabel: string;
   lockedCount: number;
@@ -69,6 +74,8 @@ export type GhostPublicState = {
   youErrorMs: number | null;
   youAutoStopped: boolean;
 };
+
+export const GHOST_TOTAL_ROUNDS = 7;
 
 export type PsychDeckId = "truth-comes-out" | "truth-comes-out-nsfw";
 

@@ -4,6 +4,7 @@ import {
   MAX_ANSWER_LEN,
   MAX_PLAYERS,
   MIN_PLAYERS_TO_START,
+  GHOST_TOTAL_ROUNDS,
   PSYCH_TOTAL_ROUNDS,
   type ClientMessage,
   type Player,
@@ -43,8 +44,11 @@ type GhostAttempt = {
 
 type GhostInternal = {
   targetMs: number;
+  roundIndex: number;
+  totalsApplied: boolean;
   activeIds: Set<string>;
   attempts: Map<string, GhostAttempt>;
+  totals: Map<string, number>;
 };
 
 function freshAttempt(): GhostAttempt {
@@ -669,9 +673,14 @@ export class Lobby extends Server {
       ghost.activeIds.add(to);
     }
     const attempt = ghost.attempts.get(from);
-    if (!attempt) return;
-    ghost.attempts.delete(from);
-    ghost.attempts.set(to, attempt);
+    if (attempt) {
+      ghost.attempts.delete(from);
+      ghost.attempts.set(to, attempt);
+    }
+    if (ghost.totals.has(from)) {
+      ghost.totals.set(to, ghost.totals.get(from)!);
+      ghost.totals.delete(from);
+    }
   }
 
   private dropGhostSeat(playerId: string) {
@@ -681,6 +690,7 @@ export class Lobby extends Server {
     if (attempt?.timer) clearTimeout(attempt.timer);
     ghost.attempts.delete(playerId);
     ghost.activeIds.delete(playerId);
+    ghost.totals.delete(playerId);
     if (ghost.activeIds.size === 0) {
       this.phase = "lobby";
       this.clearGhost();
@@ -702,34 +712,72 @@ export class Lobby extends Server {
       );
       return;
     }
-    this.beginGhostRound();
+    this.startGhostMatch([...this.players.keys()]);
   }
 
   private handleGhostAgain(connection: Connection, clientId?: string) {
     if (!this.requireHost(connection, clientId)) return;
-    if (this.phase !== "ghost_result" && this.phase !== "ghost_play") return;
-    const ids = this.ghost
-      ? [...this.ghost.activeIds].filter((id) => this.players.has(id))
-      : [...this.players.keys()];
-    if (ids.length < MIN_PLAYERS_TO_START) {
-      this.sendError(connection, `Need at least ${MIN_PLAYERS_TO_START} players.`);
+    const ghost = this.ghost;
+    if (!ghost) return;
+
+    if (this.phase === "ghost_final") {
+      const ids = [...ghost.activeIds].filter((id) => this.players.has(id));
+      if (ids.length < MIN_PLAYERS_TO_START) {
+        this.sendError(connection, `Need at least ${MIN_PLAYERS_TO_START} players.`);
+        return;
+      }
+      this.startGhostMatch(ids);
       return;
     }
-    this.beginGhostRound(ids);
+
+    if (this.phase !== "ghost_result") return;
+    this.commitGhostTotals();
+    if (ghost.roundIndex >= GHOST_TOTAL_ROUNDS - 1) {
+      this.phase = "ghost_final";
+      this.broadcastAll();
+      return;
+    }
+
+    for (const attempt of ghost.attempts.values()) {
+      if (attempt.timer) clearTimeout(attempt.timer);
+    }
+    ghost.roundIndex += 1;
+    ghost.totalsApplied = false;
+    ghost.targetMs = pickTargetMs();
+    for (const id of ghost.activeIds) ghost.attempts.set(id, freshAttempt());
+    this.phase = "ghost_play";
+    this.broadcastAll();
   }
 
-  private beginGhostRound(activeIds?: string[]) {
+  private startGhostMatch(ids: string[]) {
     this.clearGhost();
-    const ids = activeIds ?? [...this.players.keys()];
     const attempts = new Map<string, GhostAttempt>();
-    for (const id of ids) attempts.set(id, freshAttempt());
+    const totals = new Map<string, number>();
+    for (const id of ids) {
+      attempts.set(id, freshAttempt());
+      totals.set(id, 0);
+    }
     this.ghost = {
       targetMs: pickTargetMs(),
+      roundIndex: 0,
+      totalsApplied: false,
       activeIds: new Set(ids),
       attempts,
+      totals,
     };
     this.phase = "ghost_play";
     this.broadcastAll();
+  }
+
+  private commitGhostTotals() {
+    const ghost = this.ghost;
+    if (!ghost || ghost.totalsApplied) return;
+    for (const id of ghost.activeIds) {
+      const attempt = ghost.attempts.get(id);
+      const miss = attempt?.errorMs ?? GHOST_MISSED_MS;
+      ghost.totals.set(id, (ghost.totals.get(id) ?? 0) + miss);
+    }
+    ghost.totalsApplied = true;
   }
 
   private handleGhostTap(connection: Connection) {
@@ -812,6 +860,7 @@ export class Lobby extends Server {
       attempt.autoStopped = false;
       attempt.errorMs = GHOST_MISSED_MS;
     }
+    this.commitGhostTotals();
     this.phase = "ghost_result";
     this.broadcastAll();
   }
@@ -822,7 +871,9 @@ export class Lobby extends Server {
     const allDone = [...ghost.activeIds].every(
       (id) => ghost.attempts.get(id)?.status === "done",
     );
-    if (allDone) this.phase = "ghost_result";
+    if (!allDone) return;
+    this.commitGhostTotals();
+    this.phase = "ghost_result";
   }
 
   private ghostPublic(viewerId: string): GhostPublicState | null {
@@ -832,24 +883,35 @@ export class Lobby extends Server {
     const lockedCount = [...ghost.activeIds].filter(
       (id) => ghost.attempts.get(id)?.status === "done",
     ).length;
-    const revealed = this.phase === "ghost_result";
+    const revealed =
+      this.phase === "ghost_result" || this.phase === "ghost_final";
+    const final = this.phase === "ghost_final";
     let results: GhostPublicState["results"] = null;
     if (revealed) {
       const rows = [...ghost.activeIds].map((id) => {
         const attempt = ghost.attempts.get(id);
+        const errorMs = attempt?.errorMs ?? GHOST_MISSED_MS;
+        const totalMs = ghost.totals.get(id) ?? errorMs;
         return {
           id,
-          errorMs: attempt?.errorMs ?? GHOST_MISSED_MS,
+          errorMs,
+          totalMs,
           autoStopped: attempt?.autoStopped ?? false,
           missed: attempt?.missed ?? true,
         };
       });
-      const ranks = rankByError(rows);
+      const ranks = rankByError(
+        rows.map((row) => ({
+          id: row.id,
+          errorMs: final ? row.totalMs : row.errorMs,
+        })),
+      );
       results = rows
         .map((row) => ({
           playerId: row.id,
           name: this.players.get(row.id)?.name ?? "Someone",
           errorMs: row.errorMs,
+          totalMs: row.totalMs,
           autoStopped: row.autoStopped,
           missed: row.missed,
           rank: ranks.get(row.id) ?? rows.length,
@@ -858,12 +920,15 @@ export class Lobby extends Server {
         .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
     }
     return {
+      round: ghost.roundIndex + 1,
+      totalRounds: GHOST_TOTAL_ROUNDS,
+      final,
       targetMs: ghost.targetMs,
       targetLabel: formatTarget(ghost.targetMs),
       lockedCount,
       activeCount: ghost.activeIds.size,
       results,
-      youStatus: you?.status ?? "idle",
+      youStatus: final ? "done" : (you?.status ?? "idle"),
       youErrorMs: you?.status === "done" ? you.errorMs : null,
       youAutoStopped: you?.status === "done" ? you.autoStopped : false,
     };

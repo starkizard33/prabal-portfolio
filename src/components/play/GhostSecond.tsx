@@ -33,7 +33,7 @@ export function GhostSecond({
   return (
     <section className="mt-6 flex flex-col items-center">
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--play-text-muted)]">
-        Ghost Second
+        Ghost Second · {ghost.round}/{ghost.totalRounds}
       </p>
       <p className="mt-2 text-center text-sm text-[var(--play-text-muted)]">
         Feel this long. You won&apos;t see your clock.
@@ -42,7 +42,7 @@ export function GhostSecond({
         {ghost.targetLabel}
       </p>
       <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--play-text-muted)]">
-        target · lowest miss wins
+        {ghost.final ? "lowest total wins" : "target · lowest miss wins"}
       </p>
 
       <button
@@ -102,10 +102,15 @@ export function GhostSecond({
                 {row.rank}. {row.name}
                 {row.isYou ? " (you)" : ""}
               </span>
-              <span className="font-mono text-sm">
-                {row.missed
-                  ? "no tap"
-                  : `${row.errorMs.toLocaleString()} ms${row.autoStopped ? " · 30s" : ""}`}
+              <span className="text-right font-mono text-sm">
+                {ghost.final
+                  ? `${row.totalMs.toLocaleString()} ms`
+                  : `${row.errorMs.toLocaleString()} ms`}
+                {!ghost.final ? (
+                  <span className="mt-0.5 block text-[10px] opacity-70">
+                    total {row.totalMs.toLocaleString()}
+                  </span>
+                ) : null}
               </span>
             </li>
           ))}
@@ -128,7 +133,11 @@ export function GhostSecond({
               onClick={() => send({ type: "ghost_again" })}
               className="play-card w-full bg-[var(--play-yellow)] py-3 text-sm font-semibold text-[#121212]"
             >
-              New target
+              {ghost.final
+                ? "Play again"
+                : ghost.round >= ghost.totalRounds
+                  ? "Final scores"
+                  : "Next round"}
             </button>
           )}
           <button
