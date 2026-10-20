@@ -309,7 +309,7 @@ function VotePhase({
                     color: "#121212",
                   }}
                 >
-                  {opt.text}
+                  {opt.text.toLowerCase()}
                 </button>
               </li>
             );
