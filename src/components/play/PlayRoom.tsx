@@ -159,7 +159,7 @@ export function PlayRoom({ code, initialName }: PlayRoomProps) {
             >
               <p className="text-lg font-bold">Psych</p>
               <p className="mt-1 text-sm opacity-80">
-                Anonymous answers. Vote for the best take.
+                Anonymous answers. One point for every vote.
               </p>
               <p className="mt-3 text-[10px] font-semibold uppercase tracking-wider opacity-70">
                 {isHost

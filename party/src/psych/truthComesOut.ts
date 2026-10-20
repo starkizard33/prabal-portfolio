@@ -8,6 +8,8 @@ export type PromptTemplate = {
   id: string;
   /** {name} required for spotlight; {name2} optional second player */
   template: string;
+  /** One-word true answer. Only set on Is That a Fact. */
+  factAnswer?: string;
 };
 
 export const TRUTH_COMES_OUT_PROMPTS: PromptTemplate[] = [

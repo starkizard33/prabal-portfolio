@@ -34,6 +34,8 @@ export type RoundResultAnswer = {
   /** Names of players who picked this answer. Present after the vote. */
   voters: string[];
   isYou: boolean;
+  /** True on the real answer in Is That a Fact. */
+  isTruth?: boolean;
 };
 
 export type RoomState = {
@@ -89,7 +91,10 @@ export function formatGhostTime(ms: number): string {
   return `${(ms / 1000).toFixed(3)} seconds`;
 }
 
-export type PsychDeckId = "truth-comes-out" | "truth-comes-out-nsfw";
+export type PsychDeckId =
+  | "truth-comes-out"
+  | "truth-comes-out-nsfw"
+  | "is-that-a-fact";
 
 export type PsychPublicState = {
   deckId: PsychDeckId;

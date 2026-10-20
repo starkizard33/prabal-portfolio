@@ -5,6 +5,7 @@ import {
   type PromptTemplate,
 } from "./truthComesOut";
 import { TRUTH_COMES_OUT_NSFW_PROMPTS } from "./truthComesOutNsfw";
+import { IS_THAT_A_FACT_PROMPTS } from "./isThatAFact";
 
 export type DeckDefinition = {
   id: PsychDeckId;
@@ -22,6 +23,11 @@ export const PSYCH_DECKS: Record<PsychDeckId, DeckDefinition> = {
     id: "truth-comes-out-nsfw",
     title: "Truth Comes Out · NSFW",
     prompts: TRUTH_COMES_OUT_NSFW_PROMPTS,
+  },
+  "is-that-a-fact": {
+    id: "is-that-a-fact",
+    title: "Is That a Fact?",
+    prompts: IS_THAT_A_FACT_PROMPTS,
   },
 };
 

@@ -17,6 +17,12 @@ import {
 } from "../../shared/playProtocol";
 import { pickDeckPrompts, resolveDeck } from "./psych/decks";
 import { votersByAnswer } from "./psych/revealVotes";
+import {
+  FACT_TRUTH_ID,
+  isOneWordFact,
+  pointsFromVotes,
+  sameFactWord,
+} from "./psych/scoreRound";
 import { fillPrompt, type PromptTemplate } from "./psych/truthComesOut";
 import {
   GHOST_AUTO_STOP_MS,
@@ -72,6 +78,8 @@ type PsychInternal = {
   prompts: PromptTemplate[];
   roundIndex: number;
   question: string;
+  /** Display form of the true one-word answer, when this round is a fact. */
+  factAnswer: string | null;
   answers: Map<string, InternalAnswer>;
   votes: Map<string, string>;
   /** Active player connection ids for this match */
@@ -488,6 +496,7 @@ export class Lobby extends Server {
       prompts,
       roundIndex: 0,
       question,
+      factAnswer: prompts[0]?.factAnswer ?? null,
       answers: new Map(),
       votes: new Map(),
       activeIds,
@@ -518,6 +527,16 @@ export class Lobby extends Server {
         `Answer must be 1–${MAX_ANSWER_LEN} characters.`,
       );
       return;
+    }
+    if (psych.factAnswer) {
+      if (!isOneWordFact(text)) {
+        this.sendError(connection, "One word. No spaces.");
+        return;
+      }
+      if (sameFactWord(text, psych.factAnswer)) {
+        this.sendError(connection, "That's the truth. Write a bluff.");
+        return;
+      }
     }
 
     psych.answers.set(connection.id, {
@@ -551,10 +570,11 @@ export class Lobby extends Server {
       return;
     }
 
+    const isTruth = Boolean(psych.factAnswer) && answerId === FACT_TRUTH_ID;
     const target = [...psych.answers.values()].find(
       (a) => a.answerId === answerId,
     );
-    if (!target) {
+    if (!target && !isTruth) {
       this.sendError(connection, "That answer isn't on the board.");
       return;
     }
@@ -592,6 +612,7 @@ export class Lobby extends Server {
         names,
         Date.now() + next * 97,
       );
+      psych.factAnswer = prompt.factAnswer ?? null;
       this.phase = "psych_answer";
       this.broadcastAll();
       return;
@@ -610,29 +631,20 @@ export class Lobby extends Server {
     const psych = this.psych;
     if (!psych) return;
 
-    const voteCounts = new Map<string, number>();
-    for (const answerId of psych.votes.values()) {
-      if (!answerId) continue;
-      voteCounts.set(answerId, (voteCounts.get(answerId) ?? 0) + 1);
-    }
-
-    for (const answer of psych.answers.values()) {
-      const votes = voteCounts.get(answer.answerId) ?? 0;
-      const author = this.players.get(answer.authorId);
-      if (author) author.score += votes * 100;
-    }
-
-    let maxVotes = 0;
-    for (const v of voteCounts.values()) maxVotes = Math.max(maxVotes, v);
-    if (maxVotes > 0) {
-      const mvps = [...psych.answers.values()].filter(
-        (a) => (voteCounts.get(a.answerId) ?? 0) === maxVotes,
-      );
-      const bonus = Math.floor(50 / mvps.length);
-      for (const a of mvps) {
-        const author = this.players.get(a.authorId);
-        if (author) author.score += bonus;
-      }
+    const scores = pointsFromVotes({
+      votes: [...psych.votes.entries()].map(([voterId, answerId]) => ({
+        voterId,
+        answerId,
+      })),
+      answers: [...psych.answers.values()].map((answer) => ({
+        answerId: answer.answerId,
+        authorId: answer.authorId,
+      })),
+      truthId: psych.factAnswer ? FACT_TRUTH_ID : null,
+    });
+    for (const [playerId, points] of scores) {
+      const player = this.players.get(playerId);
+      if (player) player.score += points;
     }
   }
 
@@ -654,7 +666,7 @@ export class Lobby extends Server {
       const others = [...psych.answers.values()].filter(
         (a) => a.answerId !== own?.answerId,
       );
-      if (others.length === 0) {
+      if (others.length === 0 && !psych.factAnswer) {
         psych.votes.set(id, "");
         continue;
       }
@@ -1005,6 +1017,9 @@ export class Lobby extends Server {
           answerId: a.answerId,
           text: a.text,
         }));
+        if (psych.factAnswer) {
+          opts.push({ answerId: FACT_TRUTH_ID, text: psych.factAnswer });
+        }
         shuffleInPlace(opts, psych.roundIndex * 1009 + psych.answers.size);
         voteOptions = opts;
       }
@@ -1021,17 +1036,31 @@ export class Lobby extends Server {
               answerId,
             })),
         );
-        roundResults = [...psych.answers.values()]
-          .map((a) => ({
-            answerId: a.answerId,
-            text: a.text,
-            authorId: a.authorId,
-            authorName: this.players.get(a.authorId)?.name ?? "Someone",
-            votes: voteCounts.get(a.answerId) ?? 0,
-            voters: pickedBy.get(a.answerId) ?? [],
-            isYou: a.authorId === viewerId,
-          }))
-          .sort((a, b) => b.votes - a.votes);
+        const rows = [...psych.answers.values()].map((a) => ({
+          answerId: a.answerId,
+          text: a.text,
+          authorId: a.authorId,
+          authorName: this.players.get(a.authorId)?.name ?? "Someone",
+          votes: voteCounts.get(a.answerId) ?? 0,
+          voters: pickedBy.get(a.answerId) ?? [],
+          isYou: a.authorId === viewerId,
+          isTruth: false,
+        }));
+        if (psych.factAnswer) {
+          rows.push({
+            answerId: FACT_TRUTH_ID,
+            text: psych.factAnswer,
+            authorId: "",
+            authorName: "The truth",
+            votes: voteCounts.get(FACT_TRUTH_ID) ?? 0,
+            voters: pickedBy.get(FACT_TRUTH_ID) ?? [],
+            isYou: false,
+            isTruth: true,
+          });
+        }
+        roundResults = rows.sort(
+          (a, b) => Number(b.isTruth) - Number(a.isTruth) || b.votes - a.votes,
+        );
       }
 
       psychPublic = {

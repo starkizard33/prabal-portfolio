@@ -38,6 +38,14 @@ const DECKS: {
     live: true,
   },
   {
+    id: "is-that-a-fact",
+    title: "Is That a Fact?",
+    blurb:
+      "One-word bluffs mixed with the real answer. Spot the truth, or fool the room.",
+    color: "var(--play-cyan)",
+    live: true,
+  },
+  {
     id: "soon",
     title: "More decks",
     blurb: "Coming soon.",
@@ -120,11 +128,7 @@ function DeckPicker({
             type="button"
             disabled={!isHost || !deck.live}
             onClick={() => {
-              if (
-                deck.live &&
-                (deck.id === "truth-comes-out" ||
-                  deck.id === "truth-comes-out-nsfw")
-              ) {
+              if (deck.live && deck.id !== "soon") {
                 send({ type: "start_deck", deckId: deck.id });
               }
             }}
@@ -132,7 +136,7 @@ function DeckPicker({
             style={{
               background: deck.color,
               color: "#121212",
-              transform: `rotate(${i === 0 ? -1 : i === 1 ? 1.5 : -0.5}deg)`,
+              transform: `rotate(${[-1, 1.5, -0.6, 0.8][i] ?? 0}deg)`,
             }}
           >
             <p className="text-lg font-bold">{deck.title}</p>
@@ -176,6 +180,11 @@ function AnswerPhase({
     <section className="space-y-5">
       <RoundHeader psych={psych} label="Answer" />
       <QuestionCard text={psych.question ?? ""} />
+      {psych.deckId === "is-that-a-fact" ? (
+        <p className="text-sm text-[var(--play-text-muted)]">
+          Write a one-word bluff. The real answer is already in the pile.
+        </p>
+      ) : null}
 
       {isSpectator ? (
         <p className="text-sm text-[var(--play-text-muted)]">
@@ -199,17 +208,32 @@ function AnswerPhase({
             send({ type: "submit_answer", text });
           }}
         >
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value.slice(0, MAX_ANSWER_LEN))}
-            rows={3}
-            maxLength={MAX_ANSWER_LEN}
-            placeholder="Type something sharp, silly, or true…"
-            className="w-full resize-none rounded-[var(--play-radius-md)] border border-white/10 bg-[var(--play-surface)] px-4 py-3 text-base text-white outline-none placeholder:text-white/30 focus:border-[var(--play-coral)]"
-          />
+          {psych.deckId === "is-that-a-fact" ? (
+            <input
+              value={text}
+              onChange={(e) =>
+                setText(e.target.value.replace(/\s/g, "").slice(0, 40))
+              }
+              maxLength={40}
+              autoCapitalize="off"
+              placeholder="One word"
+              className="w-full rounded-[var(--play-radius-md)] border border-white/10 bg-[var(--play-surface)] px-4 py-3 text-base text-white outline-none placeholder:text-white/30 focus:border-[var(--play-cyan)]"
+            />
+          ) : (
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, MAX_ANSWER_LEN))}
+              rows={3}
+              maxLength={MAX_ANSWER_LEN}
+              placeholder="Type something sharp, silly, or true…"
+              className="w-full resize-none rounded-[var(--play-radius-md)] border border-white/10 bg-[var(--play-surface)] px-4 py-3 text-base text-white outline-none placeholder:text-white/30 focus:border-[var(--play-coral)]"
+            />
+          )}
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-[var(--play-text-muted)]">
-              {text.length}/{MAX_ANSWER_LEN}
+              {psych.deckId === "is-that-a-fact"
+                ? "One word"
+                : `${text.length}/${MAX_ANSWER_LEN}`}
             </span>
             <button
               type="submit"
@@ -244,8 +268,9 @@ function VotePhase({
       <RoundHeader psych={psych} label="Vote" />
       <QuestionCard text={psych.question ?? ""} />
       <p className="text-sm text-[var(--play-text-muted)]">
-        Pick the funniest / most accurate. Answers are anonymous — you can't
-        pick your own.
+        {psych.deckId === "is-that-a-fact"
+          ? "Which one is the real answer? You can't pick your own bluff."
+          : "Pick the funniest / most accurate. Answers are anonymous — you can't pick your own."}
       </p>
 
       {isSpectator ? (
@@ -326,10 +351,9 @@ function RoundResultPhase({
           >
             <p className="text-sm text-white">“{r.text}”</p>
             <p className="mt-1 text-xs text-[var(--play-text-muted)]">
-              {r.authorName}
-              {r.isYou ? " (you)" : ""} · {r.votes} vote
-              {r.votes === 1 ? "" : "s"} · +{r.votes * 100}
-              pts
+              {r.isTruth
+                ? `The truth · ${r.votes} spotted it`
+                : `${r.authorName}${r.isYou ? " (you)" : ""} · ${r.votes} vote${r.votes === 1 ? "" : "s"} · +${r.votes}`}
             </p>
             <p className="mt-1 text-xs font-semibold text-white">
               {pickedLine(r.voters ?? [])}
@@ -371,7 +395,7 @@ function FinalPhase({
     <section className="space-y-5">
       <h2 className="text-2xl font-bold text-white">Final scores</h2>
       <p className="text-sm text-[var(--play-text-muted)]">
-        Truth Comes Out · {room.psych?.totalRounds ?? 7} rounds
+        {room.psych?.deckTitle ?? "Psych"} · {room.psych?.totalRounds ?? 7} rounds
       </p>
       <ol className="space-y-2">
         {ranked.map((p, i) => (
